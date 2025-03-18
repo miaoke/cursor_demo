@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.OrderMapper">
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="org.example.entity.Order">
+        <id column="order_id" property="orderId" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="amount" property="amount" jdbcType="DECIMAL"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        order_id, user_id, amount, status, created_at
+    </sql>
+
+    <!-- 插入订单 -->
+    <insert id="insert" parameterType="org.example.entity.Order" useGeneratedKeys="true" keyProperty="orderId">
+        INSERT INTO orders(order_id, user_id, amount, status, created_at)
+        VALUES(#{orderId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{amount}, #{status}, #{createdAt})
+    </insert>
+
+    <!-- 根据ID查询订单 -->
+    <select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM orders
+        WHERE order_id = #{orderId,jdbcType=BIGINT}
+    </select>
+
+    <!-- 查询所有订单 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM orders
+        ORDER BY user_id, order_id
+    </select>
+
+    <!-- 更新订单信息 -->
+    <update id="update" parameterType="org.example.entity.Order">
+        UPDATE orders
+        SET amount = #{amount},
+            status = #{status}
+        WHERE order_id = #{orderId,jdbcType=BIGINT} AND user_id = #{userId,jdbcType=BIGINT}
+    </update>
+
+    <!-- 删除订单 -->
+    <delete id="delete" parameterType="java.lang.Integer">
+        DELETE FROM orders
+        WHERE order_id = #{orderId,jdbcType=BIGINT}
+    </delete>
+
+    <!-- 根据用户ID查询订单 -->
+    <select id="selectByUserId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM orders
+        WHERE user_id = #{userId,jdbcType=BIGINT}
+        ORDER BY order_id
+    </select>
+
+    <!-- 根据状态查询订单 -->
+    <select id="selectByStatus" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM orders
+        WHERE status = #{status}
+        ORDER BY user_id, order_id
+    </select>
+</mapper> 

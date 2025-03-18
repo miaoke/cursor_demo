@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.UserMapper">
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="org.example.entity.User">
+        <id column="user_id" property="userId" jdbcType="INTEGER"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        user_id, username, email, created_at
+    </sql>
+
+    <!-- 插入用户 -->
+    <insert id="insert" parameterType="org.example.entity.User" useGeneratedKeys="true" keyProperty="userId">
+        INSERT INTO users(user_id, username, email, created_at)
+        VALUES(#{userId,jdbcType=BIGINT}, #{username}, #{email}, #{createdAt})
+    </insert>
+
+    <!-- 根据ID查询用户 -->
+    <select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM users
+        WHERE user_id = #{userId,jdbcType=BIGINT}
+    </select>
+
+    <!-- 查询所有用户 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM users
+        ORDER BY user_id
+    </select>
+
+    <!-- 更新用户信息 -->
+    <update id="update" parameterType="org.example.entity.User">
+        UPDATE users
+        SET username = #{username},
+            email = #{email}
+        WHERE user_id = #{userId,jdbcType=BIGINT}
+    </update>
+
+    <!-- 删除用户 -->
+    <delete id="delete" parameterType="java.lang.Integer">
+        DELETE FROM users
+        WHERE user_id = #{userId,jdbcType=BIGINT}
+    </delete>
+
+    <!-- 根据用户名查询用户 -->
+    <select id="selectByUsername" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM users
+        WHERE username = #{username}
+        ORDER BY user_id
+    </select>
+
+    <!-- 根据邮箱查询用户 -->
+    <select id="selectByEmail" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM users
+        WHERE email = #{email}
+        ORDER BY user_id
+    </select>
+</mapper> 

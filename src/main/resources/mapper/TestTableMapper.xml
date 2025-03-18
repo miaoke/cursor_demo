@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.mapper.TestTableMapper">
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="org.example.entity.TestTable">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        id, name, create_time
+    </sql>
+
+    <!-- 插入数据 -->
+    <insert id="insert" parameterType="org.example.entity.TestTable" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO test_table(name, create_time)
+        VALUES(#{name}, NOW())
+    </insert>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM test_table
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查询所有记录 -->
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM test_table
+    </select>
+
+    <!-- 更新记录 -->
+    <update id="update" parameterType="org.example.entity.TestTable">
+        UPDATE test_table
+        SET name = #{name}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除记录 -->
+    <delete id="delete" parameterType="java.lang.Integer">
+        DELETE FROM test_table
+        WHERE id = #{id}
+    </delete>
+</mapper> 

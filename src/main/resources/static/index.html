@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欢迎访问</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+        }
+        .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-size: 2.2em;
+        }
+        p {
+            color: #34495e;
+            line-height: 1.8;
+            margin: 1rem 0;
+            font-size: 1.1em;
+        }
+        .api-section {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        .api-link {
+            color: #3498db;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin-top: 1rem;
+        }
+        .api-link:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .version {
+            margin-top: 2rem;
+            font-size: 0.9em;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>测试系统管理平台</h1>
+        <p>这是一个基于Spring Boot的RESTful测试项目，提供完整的CRUD操作接口。</p>
+        
+        <div class="api-section">
+            <p><strong>可用API接口：</strong></p>
+            <p>
+                <a href="/api/test" class="api-link">测试表管理接口</a>
+            </p>
+        </div>
+
+        <div class="version">
+            <p>Version 1.0</p>
+            <p>Powered by Spring Boot</p>
+        </div>
+    </div>
+</body>
+</html> 
