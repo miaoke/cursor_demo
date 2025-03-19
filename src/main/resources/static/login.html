@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 分表示例系统</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3D7FFF;
+            --secondary-color: #6c757d;
+            --success-color: #38D399;
+            --info-color: #00C1DE;
+            --warning-color: #FFBA2D;
+            --danger-color: #FF6868;
+            --dark-color: #2C3E50;
+            --light-color: #f8f9fa;
+            --border-radius: 8px;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #F4F7FC;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            width: 400px;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-logo {
+            display: inline-block;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, #3D7FFF, #00C1DE);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .login-logo::before {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, #3D7FFF, #00C1DE);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.15;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            font-size: 0.875rem;
+            color: var(--secondary-color);
+        }
+        
+        .form-control {
+            height: 48px;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(61, 127, 255, 0.15);
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            height: 48px;
+            font-weight: 500;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3569D9;
+            border-color: #3569D9;
+        }
+        
+        .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .input-group-text {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            color: var(--secondary-color);
+        }
+        
+        .alert {
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        
+        .alert-danger {
+            background-color: rgba(255, 104, 104, 0.1);
+            border: 1px solid rgba(255, 104, 104, 0.2);
+            color: var(--danger-color);
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">CMK</div>
+            <h1 class="login-title">分表示例系统</h1>
+            <p class="login-subtitle">请登录您的账户继续</p>
+        </div>
+        
+        <div class="alert alert-danger" id="login-error">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <span id="error-message">用户名或密码错误</span>
+        </div>
+        
+        <form id="login-form">
+            <div class="mb-3">
+                <label for="username" class="form-label">用户名</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-user"></i></span>
+                    <input type="text" class="form-control" id="username" name="username" placeholder="请输入用户名" required>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="password" class="form-label">密码</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required>
+                </div>
+            </div>
+            
+            <div class="mb-4 d-flex justify-content-between align-items-center">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="rememberMe" name="rememberMe">
+                    <label class="form-check-label" for="rememberMe">
+                        记住我
+                    </label>
+                </div>
+                <!-- <a href="#" class="text-decoration-none" style="color: var(--primary-color);">忘记密码?</a> -->
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100">
+                <i class="fas fa-sign-in-alt me-2"></i> 登录
+            </button>
+        </form>
+        
+        <div class="footer">
+            <p>© 2024 CMK 分表示例系统</p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#login-form').on('submit', function(e) {
+                e.preventDefault();
+                
+                const username = $('#username').val();
+                const password = $('#password').val();
+                const rememberMe = $('#rememberMe').is(':checked');
+                
+                // 隐藏错误信息
+                $('#login-error').hide();
+                
+                // 构建登录请求数据
+                const loginData = {
+                    username: username,
+                    password: password,
+                    rememberMe: rememberMe
+                };
+                
+                // 发送登录请求
+                $.ajax({
+                    url: '/api/auth/login',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(loginData),
+                    success: function(response) {
+                        if (response.success) {
+                            // 登录成功，保存令牌并跳转到首页
+                            localStorage.setItem('auth_token', response.token);
+                            localStorage.setItem('user_id', response.userId);
+                            localStorage.setItem('username', response.username);
+                            window.location.href = '/index.html';
+                        } else {
+                            // 登录失败，显示错误信息
+                            $('#error-message').text(response.message || '登录失败，请检查用户名和密码');
+                            $('#login-error').show();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        // 处理请求错误
+                        $('#error-message').text('登录请求失败，请稍后再试');
+                        $('#login-error').show();
+                        console.error('登录失败:', error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

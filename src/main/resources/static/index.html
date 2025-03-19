@@ -1,84 +1,758 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>欢迎访问</title>
+    <title>分表示例系统 - 后台管理</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #3D7FFF;
+            --secondary-color: #6c757d;
+            --success-color: #38D399;
+            --info-color: #00C1DE;
+            --warning-color: #FFBA2D;
+            --danger-color: #FF6868;
+            --dark-color: #2C3E50;
+            --light-color: #f8f9fa;
+            --border-radius: 8px;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
         body {
-            font-family: 'Microsoft YaHei', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #F4F7FC;
         }
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 600px;
-            width: 90%;
-        }
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
-            font-size: 2.2em;
-        }
-        p {
-            color: #34495e;
-            line-height: 1.8;
-            margin: 1rem 0;
-            font-size: 1.1em;
-        }
-        .api-section {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background: #f8f9fa;
-            border-radius: 10px;
-        }
-        .api-link {
-            color: #3498db;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border: 2px solid #3498db;
-            border-radius: 5px;
-            transition: all 0.3s ease;
-            display: inline-block;
-            margin-top: 1rem;
-        }
-        .api-link:hover {
-            background: #3498db;
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            background-color: var(--dark-color);
             color: white;
-            transform: translateY(-2px);
         }
-        .version {
-            margin-top: 2rem;
-            font-size: 0.9em;
-            color: #95a5a6;
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 48px);
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .nav-link {
+            color: #ced4da;
+            font-weight: 500;
+            padding: .75rem 1.25rem;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        .nav-link:hover {
+            color: #fff;
+            background-color: rgba(255, 255, 255, .1);
+            border-left: 3px solid rgba(255, 255, 255, 0.5);
+        }
+        .nav-link.active {
+            color: #fff;
+            background-color: rgba(61, 127, 255, 0.2);
+            border-left: 3px solid var(--primary-color);
+        }
+        .nav-link i {
+            margin-right: 10px;
+        }
+        .main-content {
+            padding-top: 1.5rem;
+        }
+        .card {
+            margin-bottom: 1.5rem;
+            box-shadow: var(--card-shadow);
+            border: none;
+            border-radius: var(--border-radius);
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 15px 20px;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        #content-area {
+            padding: 20px;
+        }
+        .main-header {
+            background: var(--dark-color);
+            color: white;
+            padding: 0;
+            position: fixed;
+            width: 100%;
+            z-index: 99;
+            height: 48px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .content-wrapper {
+            margin-left: 250px;
+            margin-top: 48px;
+            padding: 20px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .stats-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        .stats-label {
+            font-size: 0.875rem;
+            opacity: 0.8;
+            color: var(--secondary-color);
+        }
+        .stats-icon {
+            font-size: 2rem;
+            opacity: 0.2;
+            position: absolute;
+            right: 15px;
+            bottom: 15px;
+            color: var(--dark-color);
+        }
+        .table-shard {
+            background-color: #e9ecef;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-badge {
+            padding: 0.35em 0.65em;
+            font-size: 0.75em;
+            font-weight: 700;
+            border-radius: 0.25rem;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+        }
+        .status-pending {
+            background-color: var(--warning-color);
+            color: #212529;
+        }
+        .status-processing {
+            background-color: var(--info-color);
+            color: #fff;
+        }
+        .status-completed {
+            background-color: var(--success-color);
+            color: #fff;
+        }
+        .status-cancelled {
+            background-color: var(--danger-color);
+            color: #fff;
+        }
+        .iframe-container {
+            width: 100%;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+        .iframe-loading {
+            text-align: center;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+        }
+        .cmk-logo {
+            background: linear-gradient(45deg, #3D7FFF, #00C1DE);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cmk-logo::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary-color), #00C1DE);
+            opacity: 0.15;
+            border-radius: 4px;
+            z-index: -1;
+            padding: 2px 6px;
+            margin: -2px -6px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>测试系统管理平台</h1>
-        <p>这是一个基于Spring Boot的RESTful测试项目，提供完整的CRUD操作接口。</p>
-        
-        <div class="api-section">
-            <p><strong>可用API接口：</strong></p>
-            <p>
-                <a href="/api/test" class="api-link">测试表管理接口</a>
-            </p>
-        </div>
+    <!-- 顶部导航 -->
+    <header class="main-header">
+        <nav class="navbar navbar-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">分表示例系统</a>
+                <div class="dropdown ms-3">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user me-1"></i>
+                        <span id="current-username">用户</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>设置</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>退出登录</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
 
-        <div class="version">
-            <p>Version 1.0</p>
-            <p>Powered by Spring Boot</p>
+    <!-- 侧边栏 -->
+    <div class="sidebar" style="width: 250px;">
+        <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link active" href="/" id="dashboard-link">
+                        <i class="fas fa-tachometer-alt"></i> 数据看板
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/user" id="users-link">
+                        <i class="fas fa-users"></i> 用户管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/order" id="orders-link">
+                        <i class="fas fa-shopping-cart"></i> 订单管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/test" id="test-link">
+                        <i class="fas fa-vial"></i> 测试表管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/system-info" id="system-info-link">
+                        <i class="fas fa-info-circle"></i> 系统信息
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/redis_test.html" id="redis-test-link">
+                        <i class="fas fa-database"></i> 
+                        <span class="cmk-logo">CMK</span> Redis监控
+                    </a>
+                </li>
+            </ul>
         </div>
     </div>
+
+    <!-- 主内容区 -->
+    <div class="content-wrapper">
+        <div id="content-area">
+            <!-- 默认显示信息板块 -->
+            <div id="dashboard-content">
+                <h2 class="mb-4">数据看板</h2>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card" style="position: relative; border-left: 4px solid var(--primary-color);">
+                            <div class="card-body">
+                                <div class="stats-label">用户总数</div>
+                                <div class="stats-value" id="user-count"><i class="fas fa-spinner fa-spin"></i></div>
+                                <div class="stats-icon"><i class="fas fa-users"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card" style="position: relative; border-left: 4px solid var(--success-color);">
+                            <div class="card-body">
+                                <div class="stats-label">订单总数</div>
+                                <div class="stats-value" id="order-count"><i class="fas fa-spinner fa-spin"></i></div>
+                                <div class="stats-icon"><i class="fas fa-shopping-cart"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card" style="position: relative; border-left: 4px solid var(--info-color);">
+                            <div class="card-body">
+                                <div class="stats-label">测试数据数量</div>
+                                <div class="stats-value" id="test-count"><i class="fas fa-spinner fa-spin"></i></div>
+                                <div class="stats-icon"><i class="fas fa-vial"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">最新用户</h5>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="fetchDashboardData()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-container">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th width="10%">用户ID</th>
+                                                <th width="20%">用户名</th>
+                                                <th width="30%">邮箱</th>
+                                                <th width="25%">创建时间</th>
+                                                <th width="15%">所在分表</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="latest-users">
+                                            <tr>
+                                                <td colspan="5" class="text-center">
+                                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                                        <span class="visually-hidden">加载中...</span>
+                                                    </div>
+                                                    加载中...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-4">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">最新订单</h5>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="fetchDashboardData()">
+                                    <i class="fas fa-sync-alt"></i>
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-container">
+                                    <table class="table table-striped table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th width="10%">订单ID</th>
+                                                <th width="10%">用户ID</th>
+                                                <th width="15%">金额</th>
+                                                <th width="15%">状态</th>
+                                                <th width="25%">创建时间</th>
+                                                <th width="15%">所在分表</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="latest-orders">
+                                            <tr>
+                                                <td colspan="6" class="text-center">
+                                                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                                        <span class="visually-hidden">加载中...</span>
+                                                    </div>
+                                                    加载中...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户管理内容 -->
+            <div id="users-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>用户管理</h2>
+                    <button class="btn btn-primary" onclick="reloadIframe('user-iframe')">
+                        <i class="fas fa-sync-alt"></i> 刷新
+                    </button>
+                </div>
+                <div class="iframe-loading" id="user-iframe-loading">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p>加载用户管理页面中...</p>
+                </div>
+                <div class="iframe-container" id="user-iframe-container">
+                    <iframe id="user-iframe" src="user.html" width="100%" style="border: none;" onload="hideIframeLoading('user-iframe')"></iframe>
+                </div>
+            </div>
+
+            <!-- 订单管理内容 -->
+            <div id="orders-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>订单管理</h2>
+                    <button class="btn btn-primary" onclick="reloadIframe('order-iframe')">
+                        <i class="fas fa-sync-alt"></i> 刷新
+                    </button>
+                </div>
+                <div class="iframe-loading" id="order-iframe-loading">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p>加载订单管理页面中...</p>
+                </div>
+                <div class="iframe-container" id="order-iframe-container">
+                    <iframe id="order-iframe" src="order.html" width="100%" style="border: none;" onload="hideIframeLoading('order-iframe')"></iframe>
+                </div>
+            </div>
+
+            <!-- 测试表管理内容 -->
+            <div id="test-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>测试表管理</h2>
+                    <button class="btn btn-primary" onclick="reloadIframe('test-iframe')">
+                        <i class="fas fa-sync-alt"></i> 刷新
+                    </button>
+                </div>
+                <div class="iframe-loading" id="test-iframe-loading">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p>加载测试表管理页面中...</p>
+                </div>
+                <div class="iframe-container" id="test-iframe-container">
+                    <iframe id="test-iframe" src="test.html" width="100%" style="border: none;" onload="hideIframeLoading('test-iframe')"></iframe>
+                </div>
+            </div>
+
+            <!-- 系统信息内容 -->
+            <div id="system-info-content" style="display: none;">
+                <h2 class="mb-4">系统信息</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <h5>分表配置信息</h5>
+                    </div>
+                    <div class="card-body">
+                        <h6>用户表分表规则：</h6>
+                        <p>根据user_id取模分成5个表（users_0至users_4）</p>
+                        <div class="bg-light p-2 rounded mb-3">
+                            <code>spring.shardingsphere.rules.sharding.tables.users.table-strategy.standard.sharding-column=user_id</code><br>
+                            <code>spring.shardingsphere.rules.sharding.sharding-algorithms.users_inline.props.algorithm-expression=users_$->{user_id % 5}</code>
+                        </div>
+                        
+                        <h6 class="mt-3">订单表分表规则：</h6>
+                        <p>根据user_id取模分成5个表（orders_0至orders_4）</p>
+                        <div class="bg-light p-2 rounded mb-3">
+                            <code>spring.shardingsphere.rules.sharding.tables.orders.table-strategy.standard.sharding-column=user_id</code><br>
+                            <code>spring.shardingsphere.rules.sharding.sharding-algorithms.orders_inline.props.algorithm-expression=orders_$->{user_id % 5}</code>
+                        </div>
+
+                        <h6 class="mt-3">测试表配置：</h6>
+                        <p>配置为ShardingSphere-JDBC全局表，所有数据源中都存在</p>
+                        <div class="bg-light p-2 rounded">
+                            <code>spring.shardingsphere.rules.sharding.tables.test_table.actual-data-nodes=ds0.test_table</code><br>
+                            <code>spring.shardingsphere.rules.sharding.broadcast-tables=test_table</code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 侧边栏链接点击事件
+            document.getElementById('dashboard-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showContent('dashboard');
+                fetchDashboardData();
+            });
+            
+            document.getElementById('users-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showContent('users');
+            });
+            
+            document.getElementById('orders-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showContent('orders');
+            });
+            
+            document.getElementById('test-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showContent('test');
+            });
+            
+            document.getElementById('system-info-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showContent('system-info');
+            });
+            
+            document.getElementById('redis-test-link').addEventListener('click', function(e) {
+                e.preventDefault();
+                showContent('redis-test');
+            });
+            
+            // 初始加载数据
+            fetchDashboardData();
+            
+            // 监听iframe发送的消息以调整高度
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'resize') {
+                    const height = event.data.height + 30; // 额外添加一些空间
+                    const iframe = document.querySelector('iframe:not([style*="display: none"])');
+                    if (iframe) {
+                        iframe.style.height = height + 'px';
+                        const container = iframe.parentElement;
+                        if (container) {
+                            container.style.height = height + 'px';
+                        }
+                    }
+                }
+            });
+        });
+        
+        // 显示对应内容区域
+        function showContent(contentId) {
+            // 隐藏所有内容
+            document.getElementById('dashboard-content').style.display = 'none';
+            document.getElementById('users-content').style.display = 'none';
+            document.getElementById('orders-content').style.display = 'none';
+            document.getElementById('test-content').style.display = 'none';
+            document.getElementById('system-info-content').style.display = 'none';
+            
+            // 移除所有激活状态
+            document.querySelectorAll('.nav-link').forEach(function(link) {
+                link.classList.remove('active');
+            });
+            
+            // 显示选中的内容
+            document.getElementById(contentId + '-content').style.display = 'block';
+            document.getElementById(contentId + '-link').classList.add('active');
+            
+            // 如果是iframe内容，尝试调整高度
+            if (contentId !== 'dashboard' && contentId !== 'system-info') {
+                setTimeout(function() {
+                    adjustIframeHeight(contentId + '-iframe');
+                }, 300);
+            }
+        }
+        
+        // 获取仪表盘数据
+        function fetchDashboardData() {
+            // 获取用户总数
+            fetch('/api/users')
+                .then(response => response.json())
+                .then(users => {
+                    document.getElementById('user-count').textContent = users.length;
+                    
+                    // 显示最新5个用户
+                    const latestUsers = users.slice(0, 5);
+                    let userRows = '';
+                    
+                    if (latestUsers.length === 0) {
+                        userRows = '<tr><td colspan="5" class="text-center">暂无数据</td></tr>';
+                    } else {
+                        latestUsers.forEach(user => {
+                            const tableIndex = user.userId % 5;
+                            userRows += `
+                                <tr>
+                                    <td>${user.userId}</td>
+                                    <td>${user.username}</td>
+                                    <td>${user.email}</td>
+                                    <td>${formatDateTime(user.createdAt)}</td>
+                                    <td><span class="table-shard">users_${tableIndex}</span></td>
+                                </tr>
+                            `;
+                        });
+                    }
+                    
+                    document.getElementById('latest-users').innerHTML = userRows;
+                })
+                .catch(error => {
+                    console.error('获取用户数据失败:', error);
+                    document.getElementById('user-count').textContent = '获取失败';
+                    document.getElementById('latest-users').innerHTML = '<tr><td colspan="5" class="text-center text-danger">数据加载失败</td></tr>';
+                });
+            
+            // 获取订单总数
+            fetch('/api/orders')
+                .then(response => response.json())
+                .then(orders => {
+                    document.getElementById('order-count').textContent = orders.length;
+                    
+                    // 显示最新5个订单
+                    const latestOrders = orders.slice(0, 5);
+                    let orderRows = '';
+                    
+                    if (latestOrders.length === 0) {
+                        orderRows = '<tr><td colspan="6" class="text-center">暂无数据</td></tr>';
+                    } else {
+                        latestOrders.forEach(order => {
+                            const tableIndex = order.userId % 5;
+                            orderRows += `
+                                <tr>
+                                    <td>${order.orderId}</td>
+                                    <td>${order.userId}</td>
+                                    <td>¥${parseFloat(order.amount).toFixed(2)}</td>
+                                    <td><span class="status-badge status-${order.status.toLowerCase()}">${getOrderStatusText(order.status)}</span></td>
+                                    <td>${formatDateTime(order.createdAt)}</td>
+                                    <td><span class="table-shard">orders_${tableIndex}</span></td>
+                                </tr>
+                            `;
+                        });
+                    }
+                    
+                    document.getElementById('latest-orders').innerHTML = orderRows;
+                })
+                .catch(error => {
+                    console.error('获取订单数据失败:', error);
+                    document.getElementById('order-count').textContent = '获取失败';
+                    document.getElementById('latest-orders').innerHTML = '<tr><td colspan="6" class="text-center text-danger">数据加载失败</td></tr>';
+                });
+            
+            // 获取测试表数据数量
+            fetch('/api/test')
+                .then(response => response.json())
+                .then(testData => {
+                    document.getElementById('test-count').textContent = testData.length;
+                })
+                .catch(error => {
+                    console.error('获取测试数据失败:', error);
+                    document.getElementById('test-count').textContent = '获取失败';
+                });
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(dateTime) {
+            if (!dateTime) return '';
+            
+            const date = new Date(dateTime);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        // 获取订单状态文本
+        function getOrderStatusText(status) {
+            const statusMap = {
+                'PENDING': '待处理',
+                'PROCESSING': '处理中',
+                'COMPLETED': '已完成',
+                'CANCELLED': '已取消'
+            };
+            return statusMap[status] || status;
+        }
+        
+        // 重新加载iframe
+        function reloadIframe(iframeId) {
+            const iframe = document.getElementById(iframeId);
+            const loadingId = iframeId + '-loading';
+            const containerId = iframeId + '-container';
+            
+            // 显示加载提示
+            document.getElementById(loadingId).style.display = 'block';
+            document.getElementById(containerId).style.display = 'none';
+            
+            // 重新加载iframe
+            iframe.src = iframe.src;
+        }
+        
+        // 隐藏iframe加载提示
+        function hideIframeLoading(iframeId) {
+            const loadingId = iframeId + '-loading';
+            const containerId = iframeId + '-container';
+            
+            // 隐藏加载提示，显示iframe
+            document.getElementById(loadingId).style.display = 'none';
+            document.getElementById(containerId).style.display = 'block';
+            
+            // 调整iframe高度
+            adjustIframeHeight(iframeId);
+        }
+        
+        // 调整iframe高度
+        function adjustIframeHeight(iframeId) {
+            const iframe = document.getElementById(iframeId);
+            try {
+                // 设置初始高度
+                iframe.style.height = '600px';
+                
+                // 尝试获取iframe内容高度
+                setTimeout(function() {
+                    try {
+                        // 通过postMessage方式触发iframe内部发送高度
+                        iframe.contentWindow.postMessage('requestHeight', '*');
+                    } catch (e) {
+                        console.warn('无法通过postMessage获取iframe高度:', e);
+                        // 使用备用方法设置高度
+                        iframe.style.height = '800px';
+                    }
+                }, 500);
+            } catch (e) {
+                console.error('调整iframe高度失败:', e);
+                // 设置一个固定的高度作为后备
+                iframe.style.height = '800px';
+            }
+        }
+
+        // 检查用户是否已登录
+        $(document).ready(function() {
+            // 检查本地存储中是否有令牌
+            const token = localStorage.getItem('auth_token');
+            const username = localStorage.getItem('username');
+            
+            if (!token) {
+                // 未登录，跳转到登录页面
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // 显示用户名
+            if (username) {
+                $('#current-username').text(username);
+            }
+            
+            // 验证令牌有效性
+            $.ajax({
+                url: '/api/auth/validate',
+                type: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                },
+                success: function(response) {
+                    if (!response.success) {
+                        // 令牌无效，清除本地存储并跳转到登录页面
+                        localStorage.removeItem('auth_token');
+                        localStorage.removeItem('user_id');
+                        localStorage.removeItem('username');
+                        window.location.href = '/login.html';
+                    }
+                },
+                error: function() {
+                    // 请求失败，清除本地存储并跳转到登录页面
+                    localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user_id');
+                    localStorage.removeItem('username');
+                    window.location.href = '/login.html';
+                }
+            });
+            
+            // 退出登录
+            $('#logout-btn').on('click', function() {
+                // 清除本地存储
+                localStorage.removeItem('auth_token');
+                localStorage.removeItem('user_id');
+                localStorage.removeItem('username');
+                
+                // 跳转到登录页面
+                window.location.href = '/login.html';
+            });
+            
+            // 加载数据
+            loadData();
+        });
+    </script>
 </body>
 </html> 

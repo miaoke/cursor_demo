@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统信息 - 分表示例系统</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: transparent;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        .container-fluid {
+            padding: 0;
+        }
+        .card {
+            border-radius: 0.25rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 1rem;
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        }
+        .config-block {
+            background-color: #f8f9fa;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        .config-code {
+            background-color: #e9ecef;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.875rem;
+            color: #212529;
+            white-space: pre-wrap;
+        }
+        .section-title {
+            margin-bottom: 1.5rem;
+            font-weight: 600;
+            color: #343a40;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .alert-info {
+            background-color: #cff4fc;
+            border-color: #b6effb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> 本系统演示了ShardingSphere-JDBC分表和全局表的功能
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <h2 class="section-title"><i class="fas fa-cogs me-2"></i> 分表配置信息</h2>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-users me-2"></i> 用户表分表规则</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>根据user_id取模分成5个表（users_0至users_4）</p>
+                        <div class="config-code mb-3">
+                            spring.shardingsphere.rules.sharding.tables.users.table-strategy.standard.sharding-column=user_id
+                            
+                            spring.shardingsphere.rules.sharding.sharding-algorithms.users_inline.props.algorithm-expression=users_$->{user_id % 5}
+                        </div>
+                        <div class="alert alert-warning">
+                            <strong>分表说明：</strong> 用户ID对5取模，根据结果将数据分散到5个物理表中
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-shopping-cart me-2"></i> 订单表分表规则</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>根据user_id取模分成5个表（orders_0至orders_4）</p>
+                        <div class="config-code mb-3">
+                            spring.shardingsphere.rules.sharding.tables.orders.table-strategy.standard.sharding-column=user_id
+                            
+                            spring.shardingsphere.rules.sharding.sharding-algorithms.orders_inline.props.algorithm-expression=orders_$->{user_id % 5}
+                        </div>
+                        <div class="alert alert-warning">
+                            <strong>分表说明：</strong> 使用与用户表相同的分片键，确保相关数据位于同一个数据节点上
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-vial me-2"></i> 测试表配置</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>配置为ShardingSphere-JDBC全局表，所有数据源中都存在完整副本</p>
+                        <div class="config-code mb-3">
+                            spring.shardingsphere.rules.sharding.tables.test_table.actual-data-nodes=ds0.test_table
+                            
+                            spring.shardingsphere.rules.sharding.broadcast-tables=test_table
+                        </div>
+                        <div class="alert alert-warning">
+                            <strong>全局表说明：</strong> 主要用于配置信息或字典表等数据量不大且需要与海量数据表关联查询的场景
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <h2 class="section-title"><i class="fas fa-project-diagram me-2"></i> 系统架构</h2>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-database me-2"></i> 数据库配置</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                数据库类型
+                                <span class="badge bg-primary rounded-pill">MySQL</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                连接池
+                                <span class="badge bg-primary rounded-pill">HikariCP</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                分表中间件
+                                <span class="badge bg-primary rounded-pill">ShardingSphere-JDBC</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-code me-2"></i> 技术栈</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                后端框架
+                                <span class="badge bg-primary rounded-pill">Spring Boot</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                ORM框架
+                                <span class="badge bg-primary rounded-pill">MyBatis</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                前端框架
+                                <span class="badge bg-primary rounded-pill">Bootstrap 5</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 如果在iframe中，通知父窗口调整高度
+        if (window.parent && window.parent !== window) {
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    window.parent.postMessage({ 
+                        type: 'resize', 
+                        height: document.body.scrollHeight 
+                    }, '*');
+                }, 100);
+            });
+        }
+    </script>
+</body>
+</html> 

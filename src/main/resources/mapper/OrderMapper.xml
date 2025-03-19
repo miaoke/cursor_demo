@@ -5,8 +5,8 @@
 <mapper namespace="org.example.mapper.OrderMapper">
     <!-- 结果映射 -->
     <resultMap id="BaseResultMap" type="org.example.entity.Order">
-        <id column="order_id" property="orderId" jdbcType="INTEGER"/>
-        <result column="user_id" property="userId" jdbcType="INTEGER"/>
+        <id column="order_id" property="orderId" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
         <result column="amount" property="amount" jdbcType="DECIMAL"/>
         <result column="status" property="status" jdbcType="VARCHAR"/>
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
@@ -14,17 +14,17 @@
 
     <!-- 基础列 -->
     <sql id="Base_Column_List">
-        order_id, user_id, amount, status, created_at
+        order_id, user_id, amount, status, UNIX_TIMESTAMP(created_at) * 1000 as created_at
     </sql>
 
     <!-- 插入订单 -->
     <insert id="insert" parameterType="org.example.entity.Order" useGeneratedKeys="true" keyProperty="orderId">
-        INSERT INTO orders(order_id, user_id, amount, status, created_at)
-        VALUES(#{orderId,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{amount}, #{status}, #{createdAt})
+        INSERT INTO orders(user_id, amount, status, created_at)
+        VALUES(#{userId,jdbcType=BIGINT}, #{amount}, #{status}, FROM_UNIXTIME(#{createdAt}/1000))
     </insert>
 
     <!-- 根据ID查询订单 -->
-    <select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    <select id="selectById" parameterType="java.lang.Long" resultMap="BaseResultMap">
         SELECT 
         <include refid="Base_Column_List"/>
         FROM orders
@@ -48,13 +48,13 @@
     </update>
 
     <!-- 删除订单 -->
-    <delete id="delete" parameterType="java.lang.Integer">
+    <delete id="delete" parameterType="java.lang.Long">
         DELETE FROM orders
         WHERE order_id = #{orderId,jdbcType=BIGINT}
     </delete>
 
     <!-- 根据用户ID查询订单 -->
-    <select id="selectByUserId" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    <select id="selectByUserId" parameterType="java.lang.Long" resultMap="BaseResultMap">
         SELECT 
         <include refid="Base_Column_List"/>
         FROM orders

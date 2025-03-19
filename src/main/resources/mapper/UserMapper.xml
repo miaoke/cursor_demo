@@ -5,37 +5,39 @@
 <mapper namespace="org.example.mapper.UserMapper">
     <!-- 结果映射 -->
     <resultMap id="BaseResultMap" type="org.example.entity.User">
-        <id column="user_id" property="userId" jdbcType="INTEGER"/>
-        <result column="username" property="username" jdbcType="VARCHAR"/>
-        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <id column="user_id" property="userId"/>
+        <result column="username" property="username"/>
+        <result column="email" property="email"/>
+        <result column="password" property="password"/>
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="last_login_time" property="lastLoginTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <!-- 基础列 -->
     <sql id="Base_Column_List">
-        user_id, username, email, created_at
+        user_id, username, email, password, UNIX_TIMESTAMP(created_at) * 1000 as created_at, 
+        UNIX_TIMESTAMP(last_login_time) * 1000 as last_login_time
     </sql>
 
     <!-- 插入用户 -->
     <insert id="insert" parameterType="org.example.entity.User" useGeneratedKeys="true" keyProperty="userId">
-        INSERT INTO users(user_id, username, email, created_at)
-        VALUES(#{userId,jdbcType=BIGINT}, #{username}, #{email}, #{createdAt})
+        INSERT INTO users (username, email, password, created_at)
+        VALUES (#{username}, #{email}, #{password}, FROM_UNIXTIME(#{createdAt}/1000))
     </insert>
 
     <!-- 根据ID查询用户 -->
-    <select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-        SELECT 
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
         <include refid="Base_Column_List"/>
         FROM users
-        WHERE user_id = #{userId,jdbcType=BIGINT}
+        WHERE user_id = #{userId}
     </select>
 
     <!-- 查询所有用户 -->
     <select id="selectAll" resultMap="BaseResultMap">
-        SELECT 
+        SELECT
         <include refid="Base_Column_List"/>
         FROM users
-        ORDER BY user_id
     </select>
 
     <!-- 更新用户信息 -->
@@ -43,30 +45,33 @@
         UPDATE users
         SET username = #{username},
             email = #{email}
-        WHERE user_id = #{userId,jdbcType=BIGINT}
+            <if test="password != null and password != ''">
+            , password = #{password}
+            </if>
+            <if test="lastLoginTime != null">
+            , last_login_time = FROM_UNIXTIME(#{lastLoginTime}/1000)
+            </if>
+        WHERE user_id = #{userId}
     </update>
 
     <!-- 删除用户 -->
-    <delete id="delete" parameterType="java.lang.Integer">
-        DELETE FROM users
-        WHERE user_id = #{userId,jdbcType=BIGINT}
+    <delete id="delete">
+        DELETE FROM users WHERE user_id = #{userId}
     </delete>
 
     <!-- 根据用户名查询用户 -->
-    <select id="selectByUsername" parameterType="java.lang.String" resultMap="BaseResultMap">
-        SELECT 
+    <select id="selectByUsername" resultMap="BaseResultMap">
+        SELECT
         <include refid="Base_Column_List"/>
         FROM users
         WHERE username = #{username}
-        ORDER BY user_id
     </select>
 
     <!-- 根据邮箱查询用户 -->
-    <select id="selectByEmail" parameterType="java.lang.String" resultMap="BaseResultMap">
-        SELECT 
+    <select id="selectByEmail" resultMap="BaseResultMap">
+        SELECT
         <include refid="Base_Column_List"/>
         FROM users
         WHERE email = #{email}
-        ORDER BY user_id
     </select>
 </mapper> 

@@ -8,16 +8,16 @@ public interface UserService {
     User createUser(User user);
     
     // 根据ID获取用户
-    User getUserById(Integer userId);
+    User getUserById(Long userId);
     
     // 获取所有用户
     List<User> getAllUsers();
     
     // 更新用户信息
-    boolean updateUser(User user);
+    User updateUser(User user);
     
     // 删除用户
-    boolean deleteUser(Integer userId);
+    void deleteUser(Long userId);
     
     // 根据用户名获取用户
     User getUserByUsername(String username);

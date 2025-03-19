@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试表管理 - 分表示例系统</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: transparent;
+        }
+        .container-fluid {
+            padding: 0;
+        }
+        .btn-action {
+            margin-right: 5px;
+        }
+        .card {
+            border-radius: 0.25rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 1rem;
+        }
+        .modal-header {
+            background-color: #f8f9fa;
+        }
+        .alert-float {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- 新增数据按钮 -->
+        <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addModal">
+            <i class="fas fa-plus"></i> 新增测试数据
+        </button>
+        
+        <!-- 数据列表 -->
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th width="10%">ID</th>
+                                <th width="35%">名称</th>
+                                <th width="35%">创建时间</th>
+                                <th width="20%">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- 数据将通过JavaScript动态添加 -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="loading" class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">加载中...</span>
+                    </div>
+                    <p>加载中...</p>
+                </div>
+                <div id="emptyData" class="alert alert-info text-center d-none py-3">
+                    没有找到数据
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增数据模态框 -->
+    <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">新增测试数据</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addForm">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">名称</label>
+                            <input type="text" class="form-control" id="name" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑数据模态框 -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">编辑测试数据</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editForm">
+                        <input type="hidden" id="editId">
+                        <div class="mb-3">
+                            <label for="editName" class="form-label">名称</label>
+                            <input type="text" class="form-control" id="editName" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="updateBtn">更新</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作结果提示 -->
+    <div id="alertContainer"></div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后获取数据列表
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchData();
+            
+            // 保存按钮点击事件
+            document.getElementById('saveBtn').addEventListener('click', function() {
+                addData();
+            });
+            
+            // 更新按钮点击事件
+            document.getElementById('updateBtn').addEventListener('click', function() {
+                updateData();
+            });
+        });
+        
+        // 获取所有数据
+        function fetchData() {
+            const loadingElem = document.getElementById('loading');
+            const emptyDataElem = document.getElementById('emptyData');
+            
+            loadingElem.classList.remove('d-none');
+            emptyDataElem.classList.add('d-none');
+            
+            fetch('/api/test')
+                .then(response => response.json())
+                .then(data => {
+                    loadingElem.classList.add('d-none');
+                    
+                    if (data.length === 0) {
+                        emptyDataElem.classList.remove('d-none');
+                        return;
+                    }
+                    
+                    const tableBody = document.getElementById('tableBody');
+                    tableBody.innerHTML = '';
+                    
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${item.id}</td>
+                            <td>${item.name}</td>
+                            <td>${formatDateTime(item.createTime)}</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning btn-action" onclick="editData(${item.id})">
+                                    <i class="fas fa-edit"></i> 编辑
+                                </button>
+                                <button class="btn btn-sm btn-danger btn-action" onclick="deleteData(${item.id})">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                    
+                    // 通知父窗口调整iframe高度
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({ type: 'resize', height: document.body.scrollHeight }, '*');
+                    }
+                })
+                .catch(error => {
+                    console.error('获取数据列表失败:', error);
+                    loadingElem.classList.add('d-none');
+                    showAlert('获取数据列表失败，请查看控制台了解详情。', 'danger');
+                });
+        }
+        
+        // 新增数据
+        function addData() {
+            const name = document.getElementById('name').value.trim();
+            
+            if (!name) {
+                showAlert('请填写名称', 'warning');
+                return;
+            }
+            
+            const data = {
+                name: name
+            };
+            
+            fetch('/api/test', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('添加数据失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('addModal'));
+                modal.hide();
+                
+                // 重置表单
+                document.getElementById('addForm').reset();
+                
+                // 刷新数据列表
+                fetchData();
+                
+                showAlert('数据添加成功！', 'success');
+            })
+            .catch(error => {
+                console.error('添加数据失败:', error);
+                showAlert('添加数据失败，请查看控制台了解详情。', 'danger');
+            });
+        }
+        
+        // 编辑数据
+        function editData(id) {
+            fetch(`/api/test/${id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('获取数据信息失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('editId').value = data.id;
+                    document.getElementById('editName').value = data.name;
+                    
+                    // 显示编辑模态框
+                    const modal = new bootstrap.Modal(document.getElementById('editModal'));
+                    modal.show();
+                })
+                .catch(error => {
+                    console.error('获取数据信息失败:', error);
+                    showAlert('获取数据信息失败，请查看控制台了解详情。', 'danger');
+                });
+        }
+        
+        // 更新数据
+        function updateData() {
+            const id = document.getElementById('editId').value;
+            const name = document.getElementById('editName').value.trim();
+            
+            if (!name) {
+                showAlert('请填写名称', 'warning');
+                return;
+            }
+            
+            const data = {
+                id: id,
+                name: name
+            };
+            
+            fetch(`/api/test/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('更新数据失败');
+                }
+                
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editModal'));
+                modal.hide();
+                
+                // 刷新数据列表
+                fetchData();
+                
+                showAlert('数据更新成功！', 'success');
+            })
+            .catch(error => {
+                console.error('更新数据失败:', error);
+                showAlert('更新数据失败，请查看控制台了解详情。', 'danger');
+            });
+        }
+        
+        // 删除数据
+        function deleteData(id) {
+            // 创建确认对话框
+            const confirmModal = new bootstrap.Modal(
+                createConfirmModal(
+                    '删除确认', 
+                    '确定要删除这条数据吗？此操作不可恢复！',
+                    () => {
+                        performDelete(id);
+                    }
+                )
+            );
+            confirmModal.show();
+        }
+        
+        // 执行删除操作
+        function performDelete(id) {
+            fetch(`/api/test/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('删除数据失败');
+                }
+                
+                // 刷新数据列表
+                fetchData();
+                
+                showAlert('数据删除成功！', 'success');
+            })
+            .catch(error => {
+                console.error('删除数据失败:', error);
+                showAlert('删除数据失败，请查看控制台了解详情。', 'danger');
+            });
+        }
+        
+        // 创建确认对话框
+        function createConfirmModal(title, message, onConfirm) {
+            // 检查是否已存在确认对话框
+            let confirmModal = document.getElementById('confirmModal');
+            if (confirmModal) {
+                document.body.removeChild(confirmModal);
+            }
+            
+            // 创建新的确认对话框
+            const modalHTML = `
+                <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">${title}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>${message}</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                                <button type="button" class="btn btn-danger" id="confirmBtn">确认删除</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 添加对话框到页面
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            // 获取新创建的对话框
+            confirmModal = document.getElementById('confirmModal');
+            
+            // 绑定确认按钮事件
+            confirmModal.querySelector('#confirmBtn').addEventListener('click', function() {
+                // 关闭对话框
+                bootstrap.Modal.getInstance(confirmModal).hide();
+                // 执行回调
+                onConfirm();
+            });
+            
+            return confirmModal;
+        }
+        
+        // 显示操作提示
+        function showAlert(message, type) {
+            const alertId = 'alert-' + Date.now();
+            const alertHTML = `
+                <div id="${alertId}" class="alert alert-${type} alert-dismissible fade show alert-float" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            
+            document.getElementById('alertContainer').insertAdjacentHTML('beforeend', alertHTML);
+            
+            // 4秒后自动关闭
+            setTimeout(() => {
+                const alert = document.getElementById(alertId);
+                if (alert) {
+                    alert.classList.remove('show');
+                    setTimeout(() => {
+                        alert.remove();
+                    }, 150);
+                }
+            }, 4000);
+        }
+        
+        // 格式化日期时间
+        function formatDateTime(dateTime) {
+            if (!dateTime) return '';
+            
+            const date = new Date(dateTime);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+    </script>
+</body>
+</html> 

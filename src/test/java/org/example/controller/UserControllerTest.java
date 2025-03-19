@@ -1,6 +1,5 @@
 package org.example.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.entity.User;
 import org.example.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,21 +7,20 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class UserControllerTest {
-
-    private MockMvc mockMvc;
 
     @Mock
     private UserService userService;
@@ -30,102 +28,104 @@ class UserControllerTest {
     @InjectMocks
     private UserController userController;
 
-    private ObjectMapper objectMapper;
+    private User testUser;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
-        objectMapper = new ObjectMapper();
+        
+        testUser = new User();
+        testUser.setUserId(1L);
+        testUser.setUsername("testuser");
+        testUser.setEmail("test@example.com");
+        testUser.setCreatedAt(System.currentTimeMillis());
     }
 
     @Test
-    void createUser() throws Exception {
-        User user = new User();
-        user.setUsername("testUser");
-        user.setEmail("test@example.com");
-
-        when(userService.createUser(any(User.class))).thenReturn(user);
-
-        mockMvc.perform(post("/api/users")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("testUser"))
-                .andExpect(jsonPath("$.email").value("test@example.com"));
+    void createUser() {
+        when(userService.createUser(any(User.class))).thenReturn(testUser);
+        
+        ResponseEntity<User> response = userController.createUser(new User());
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testUser, response.getBody());
+        verify(userService, times(1)).createUser(any(User.class));
     }
 
     @Test
-    void getUserById() throws Exception {
-        User user = new User();
-        user.setUserId(1);
-        user.setUsername("testUser");
-
-        when(userService.getUserById(1)).thenReturn(user);
-
-        mockMvc.perform(get("/api/users/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(1))
-                .andExpect(jsonPath("$.username").value("testUser"));
+    void getUserById() {
+        when(userService.getUserById(anyLong())).thenReturn(testUser);
+        
+        ResponseEntity<User> response = userController.getUserById(1L);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testUser, response.getBody());
+        verify(userService, times(1)).getUserById(1L);
+    }
+    
+    @Test
+    void getUserById_NotFound() {
+        when(userService.getUserById(anyLong())).thenReturn(null);
+        
+        ResponseEntity<User> response = userController.getUserById(1L);
+        
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(userService, times(1)).getUserById(1L);
     }
 
     @Test
-    void getAllUsers() throws Exception {
-        List<User> users = Arrays.asList(
-            new User(),
-            new User()
-        );
-
+    void getAllUsers() {
+        List<User> users = Arrays.asList(testUser);
         when(userService.getAllUsers()).thenReturn(users);
-
-        mockMvc.perform(get("/api/users"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+        
+        ResponseEntity<List<User>> response = userController.getAllUsers();
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(users, response.getBody());
+        verify(userService, times(1)).getAllUsers();
     }
 
     @Test
-    void updateUser() throws Exception {
-        User user = new User();
-        user.setUsername("updatedUser");
-        user.setEmail("updated@example.com");
-
-        when(userService.updateUser(any(User.class))).thenReturn(true);
-
-        mockMvc.perform(put("/api/users/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(user)))
-                .andExpect(status().isOk());
+    void updateUser() {
+        when(userService.updateUser(any(User.class))).thenReturn(testUser);
+        
+        ResponseEntity<User> response = userController.updateUser(1L, new User());
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testUser, response.getBody());
+        verify(userService, times(1)).updateUser(any(User.class));
     }
 
     @Test
-    void deleteUser() throws Exception {
-        when(userService.deleteUser(1)).thenReturn(true);
-
-        mockMvc.perform(delete("/api/users/1"))
-                .andExpect(status().isOk());
+    void deleteUser() {
+        doNothing().when(userService).deleteUser(anyLong());
+        
+        ResponseEntity<Void> response = userController.deleteUser(1L);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(userService, times(1)).deleteUser(1L);
     }
-
+    
     @Test
-    void getUserByUsername() throws Exception {
-        User user = new User();
-        user.setUsername("testUser");
-
-        when(userService.getUserByUsername("testUser")).thenReturn(user);
-
-        mockMvc.perform(get("/api/users/username/testUser"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("testUser"));
+    void getUserByUsername() {
+        when(userService.getUserByUsername(anyString())).thenReturn(testUser);
+        
+        ResponseEntity<User> response = userController.getUserByUsername("testuser");
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testUser, response.getBody());
+        verify(userService, times(1)).getUserByUsername("testuser");
     }
-
+    
     @Test
-    void getUserByEmail() throws Exception {
-        User user = new User();
-        user.setEmail("test@example.com");
-
-        when(userService.getUserByEmail("test@example.com")).thenReturn(user);
-
-        mockMvc.perform(get("/api/users/email/test@example.com"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("test@example.com"));
+    void getUserByEmail() {
+        when(userService.getUserByEmail(anyString())).thenReturn(testUser);
+        
+        ResponseEntity<User> response = userController.getUserByEmail("test@example.com");
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testUser, response.getBody());
+        verify(userService, times(1)).getUserByEmail("test@example.com");
     }
 } 

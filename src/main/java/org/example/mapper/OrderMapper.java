@@ -10,7 +10,7 @@ public interface OrderMapper {
     int insert(Order order);
     
     // 根据ID查询订单
-    Order selectById(Integer orderId);
+    Order selectById(Long orderId);
     
     // 查询所有订单
     List<Order> selectAll();
@@ -19,10 +19,10 @@ public interface OrderMapper {
     int update(Order order);
     
     // 删除订单
-    int delete(Integer orderId);
+    int delete(Long orderId);
     
     // 根据用户ID查询订单列表
-    List<Order> selectByUserId(Integer userId);
+    List<Order> selectByUserId(Long userId);
     
     // 根据订单状态查询订单列表
     List<Order> selectByStatus(String status);

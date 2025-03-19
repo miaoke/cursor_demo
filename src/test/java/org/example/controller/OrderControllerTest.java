@@ -1,6 +1,5 @@
 package org.example.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.entity.Order;
 import org.example.service.OrderService;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,22 +7,21 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class OrderControllerTest {
-
-    private MockMvc mockMvc;
 
     @Mock
     private OrderService orderService;
@@ -31,108 +29,118 @@ class OrderControllerTest {
     @InjectMocks
     private OrderController orderController;
 
-    private ObjectMapper objectMapper;
+    private Order testOrder;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(orderController).build();
-        objectMapper = new ObjectMapper();
+        
+        testOrder = new Order();
+        testOrder.setOrderId(1L);
+        testOrder.setUserId(1L);
+        testOrder.setAmount(new BigDecimal("99.99"));
+        testOrder.setStatus("PENDING");
+        testOrder.setCreatedAt(System.currentTimeMillis());
     }
 
     @Test
-    void createOrder() throws Exception {
-        Order order = new Order();
-        order.setUserId(1);
-        order.setAmount(new BigDecimal("100.00"));
-        order.setStatus("PENDING");
-
-        when(orderService.createOrder(any(Order.class))).thenReturn(order);
-
-        mockMvc.perform(post("/api/orders")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(order)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(1))
-                .andExpect(jsonPath("$.amount").value(100.00))
-                .andExpect(jsonPath("$.status").value("PENDING"));
+    void createOrder() {
+        when(orderService.createOrder(any(Order.class))).thenReturn(testOrder);
+        
+        ResponseEntity<Order> response = orderController.createOrder(new Order());
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testOrder, response.getBody());
+        verify(orderService, times(1)).createOrder(any(Order.class));
     }
 
     @Test
-    void getOrderById() throws Exception {
-        Order order = new Order();
-        order.setOrderId(1);
-        order.setAmount(new BigDecimal("100.00"));
-
-        when(orderService.getOrderById(1)).thenReturn(order);
-
-        mockMvc.perform(get("/api/orders/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.orderId").value(1))
-                .andExpect(jsonPath("$.amount").value(100.00));
+    void getOrderById() {
+        when(orderService.getOrderById(anyLong())).thenReturn(testOrder);
+        
+        ResponseEntity<Order> response = orderController.getOrderById(1L);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testOrder, response.getBody());
+        verify(orderService, times(1)).getOrderById(1L);
+    }
+    
+    @Test
+    void getOrderById_NotFound() {
+        when(orderService.getOrderById(anyLong())).thenReturn(null);
+        
+        ResponseEntity<Order> response = orderController.getOrderById(1L);
+        
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(orderService, times(1)).getOrderById(1L);
     }
 
     @Test
-    void getAllOrders() throws Exception {
-        List<Order> orders = Arrays.asList(
-            new Order(),
-            new Order()
-        );
-
+    void getAllOrders() {
+        List<Order> orders = Arrays.asList(testOrder);
         when(orderService.getAllOrders()).thenReturn(orders);
-
-        mockMvc.perform(get("/api/orders"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+        
+        ResponseEntity<List<Order>> response = orderController.getAllOrders();
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(orders, response.getBody());
+        verify(orderService, times(1)).getAllOrders();
     }
 
     @Test
-    void updateOrder() throws Exception {
-        Order order = new Order();
-        order.setAmount(new BigDecimal("200.00"));
-        order.setStatus("COMPLETED");
-
-        when(orderService.updateOrder(any(Order.class))).thenReturn(true);
-
-        mockMvc.perform(put("/api/orders/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(order)))
-                .andExpect(status().isOk());
+    void updateOrder() {
+        when(orderService.updateOrder(any(Order.class))).thenReturn(testOrder);
+        
+        ResponseEntity<Order> response = orderController.updateOrder(1L, new Order());
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(testOrder, response.getBody());
+        verify(orderService, times(1)).updateOrder(any(Order.class));
+    }
+    
+    @Test
+    void updateOrder_NotFound() {
+        when(orderService.updateOrder(any(Order.class))).thenReturn(null);
+        
+        ResponseEntity<Order> response = orderController.updateOrder(1L, new Order());
+        
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertNull(response.getBody());
+        verify(orderService, times(1)).updateOrder(any(Order.class));
     }
 
     @Test
-    void deleteOrder() throws Exception {
-        when(orderService.deleteOrder(1)).thenReturn(true);
-
-        mockMvc.perform(delete("/api/orders/1"))
-                .andExpect(status().isOk());
+    void deleteOrder() {
+        doNothing().when(orderService).deleteOrder(anyLong());
+        
+        ResponseEntity<Void> response = orderController.deleteOrder(1L);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(orderService, times(1)).deleteOrder(1L);
     }
-
+    
     @Test
-    void getOrdersByUserId() throws Exception {
-        List<Order> orders = Arrays.asList(
-            new Order(),
-            new Order()
-        );
-
-        when(orderService.getOrdersByUserId(1)).thenReturn(orders);
-
-        mockMvc.perform(get("/api/orders/user/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+    void getOrdersByUserId() {
+        List<Order> orders = Arrays.asList(testOrder);
+        when(orderService.getOrdersByUserId(anyLong())).thenReturn(orders);
+        
+        ResponseEntity<List<Order>> response = orderController.getOrdersByUserId(1L);
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(orders, response.getBody());
+        verify(orderService, times(1)).getOrdersByUserId(1L);
     }
-
+    
     @Test
-    void getOrdersByStatus() throws Exception {
-        List<Order> orders = Arrays.asList(
-            new Order(),
-            new Order()
-        );
-
-        when(orderService.getOrdersByStatus("PENDING")).thenReturn(orders);
-
-        mockMvc.perform(get("/api/orders/status/PENDING"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+    void getOrdersByStatus() {
+        List<Order> orders = Arrays.asList(testOrder);
+        when(orderService.getOrdersByStatus(anyString())).thenReturn(orders);
+        
+        ResponseEntity<List<Order>> response = orderController.getOrdersByStatus("PENDING");
+        
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(orders, response.getBody());
+        verify(orderService, times(1)).getOrdersByStatus("PENDING");
     }
 } 

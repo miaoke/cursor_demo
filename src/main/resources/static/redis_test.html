@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redis监控面板 - CMK</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #3D7FFF;
+            --secondary-color: #6c757d;
+            --success-color: #38D399;
+            --info-color: #00C1DE;
+            --warning-color: #FFBA2D;
+            --danger-color: #FF6868;
+            --dark-color: #2C3E50;
+            --light-color: #f8f9fa;
+            --border-radius: 8px;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #F4F7FC;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin-top: 20px;
+            padding: 0 20px;
+        }
+        
+        .dashboard-header {
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .logo {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+        }
+        
+        .logo-text {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(45deg, #3D7FFF, #00C1DE);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+        
+        .logo::before {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #3D7FFF, #00C1DE);
+            opacity: 0.15;
+            z-index: -1;
+        }
+        
+        .dashboard-title h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .dashboard-title p {
+            color: #6c757d;
+            margin: 5px 0 0;
+        }
+        
+        .stats-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            padding: 20px;
+            flex: 1;
+            min-width: 180px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-left: 4px solid transparent;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card.bg-connection { border-color: var(--primary-color); }
+        .stat-card.bg-ops { border-color: var(--success-color); }
+        .stat-card.bg-memory { border-color: var(--info-color); }
+        .stat-card.bg-keys { border-color: var(--warning-color); }
+        .stat-card.bg-clients { border-color: var(--danger-color); }
+        .stat-card.bg-latency { border-color: #9C6DFF; }
+        
+        .stat-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.2rem;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: white;
+        }
+        
+        .bg-connection .stat-icon { background-color: var(--primary-color); }
+        .bg-ops .stat-icon { background-color: var(--success-color); }
+        .bg-memory .stat-icon { background-color: var(--info-color); }
+        .bg-keys .stat-icon { background-color: var(--warning-color); }
+        .bg-clients .stat-icon { background-color: var(--danger-color); }
+        .bg-latency .stat-icon { background-color: #9C6DFF; }
+        
+        .stat-title {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+        }
+        
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .stat-change {
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .stat-change.positive { color: var(--success-color); }
+        .stat-change.negative { color: var(--danger-color); }
+        
+        .dashboard-panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        @media (max-width: 992px) {
+            .dashboard-panels {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .panel {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            padding: 15px 20px;
+            background-color: white;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            color: var(--dark-color);
+        }
+        
+        .panel-title i {
+            margin-right: 10px;
+            color: #6c757d;
+        }
+        
+        .panel-body {
+            padding: 20px;
+        }
+        
+        .operation-form label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #495057;
+        }
+        
+        .form-control {
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(61, 127, 255, 0.15);
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #3569D9;
+            border-color: #3569D9;
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+        
+        .btn-success:hover {
+            background-color: #2EBB84;
+            border-color: #2EBB84;
+        }
+        
+        .btn-info {
+            background-color: var(--info-color);
+            border-color: var(--info-color);
+            color: white;
+        }
+        
+        .btn-info:hover {
+            background-color: #00A7C0;
+            border-color: #00A7C0;
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+        
+        .btn-danger:hover {
+            background-color: #E55C5C;
+            border-color: #E55C5C;
+        }
+        
+        .result-box {
+            min-height: 100px;
+            padding: 15px;
+            border-radius: 6px;
+            background-color: #F8FAFC;
+            border: 1px solid #e9ecef;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow: auto;
+            margin-top: 15px;
+        }
+        
+        .loading {
+            display: none;
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            color: #9aa2af;
+            font-size: 0.875rem;
+            margin-top: 20px;
+            border-top: 1px solid #eaeaea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="logo-container">
+                    <div class="logo">
+                        <span class="logo-text">CMK</span>
+                    </div>
+                    <div class="dashboard-title">
+                        <h1>Redis监控面板</h1>
+                        <p>分布式缓存监控与操作工具</p>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" id="refresh-dashboard">
+                        <i class="fas fa-sync-alt me-1"></i> 刷新
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-cards">
+            <div class="stat-card bg-connection">
+                <div class="stat-icon"><i class="fas fa-plug"></i></div>
+                <div class="stat-title">连接状态</div>
+                <div class="stat-value">3</div>
+                <div class="stat-change positive"><i class="fas fa-arrow-up me-1"></i> 1.5%</div>
+            </div>
+            <div class="stat-card bg-ops">
+                <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+                <div class="stat-title">每秒操作数</div>
+                <div class="stat-value">7</div>
+                <div class="stat-change negative"><i class="fas fa-arrow-down me-1"></i> 2.0%</div>
+            </div>
+            <div class="stat-card bg-memory">
+                <div class="stat-icon"><i class="fas fa-memory"></i></div>
+                <div class="stat-title">内存使用</div>
+                <div class="stat-value">8MB</div>
+                <div class="stat-change positive"><i class="fas fa-arrow-up me-1"></i> 1.2%</div>
+            </div>
+            <div class="stat-card bg-keys">
+                <div class="stat-icon"><i class="fas fa-key"></i></div>
+                <div class="stat-title">键总数</div>
+                <div class="stat-value">18</div>
+                <div class="stat-change negative"><i class="fas fa-arrow-down me-1"></i> 0.8%</div>
+            </div>
+            <div class="stat-card bg-clients">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-title">客户端连接</div>
+                <div class="stat-value">8</div>
+                <div class="stat-change negative"><i class="fas fa-arrow-down me-1"></i> 1.5%</div>
+            </div>
+            <div class="stat-card bg-latency">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-title">平均延迟</div>
+                <div class="stat-value">13ms</div>
+                <div class="stat-change positive"><i class="fas fa-arrow-up me-1"></i> 0.5%</div>
+            </div>
+        </div>
+
+        <div class="dashboard-panels">
+            <div class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title"><i class="fas fa-tachometer-alt"></i> 连接测试</h3>
+                </div>
+                <div class="panel-body">
+                    <p class="text-muted mb-3">测试与Redis服务器的连接状态，验证Lettuce和Redisson客户端可用性。</p>
+                    <div class="d-flex gap-3">
+                        <button id="testConnection" class="btn btn-primary">
+                            <div class="spinner-border spinner-border-sm loading" id="testConnectionLoading" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                            <i class="fas fa-vial me-2"></i>连接测试
+                        </button>
+                        <button id="testLock" class="btn btn-info">
+                            <div class="spinner-border spinner-border-sm loading" id="testLockLoading" role="status">
+                                <span class="visually-hidden">加载中...</span>
+                            </div>
+                            <i class="fas fa-lock me-2"></i>分布式锁测试
+                        </button>
+                    </div>
+                    <div class="result-box" id="connectionResult"></div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <h3 class="panel-title"><i class="fas fa-database"></i> 键值管理</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="operation-form">
+                        <!-- Set操作 -->
+                        <div class="mb-3">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="key" class="form-label">键名</label>
+                                    <input type="text" id="key" class="form-control" placeholder="输入键名">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="value" class="form-label">值</label>
+                                    <input type="text" id="value" class="form-control" placeholder="输入值">
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button id="setValue" class="btn btn-success w-100">
+                                        <div class="spinner-border spinner-border-sm loading" id="setValueLoading" role="status">
+                                            <span class="visually-hidden">加载中...</span>
+                                        </div>
+                                        设置
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Get操作 -->
+                        <div class="mb-3">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label for="getKey" class="form-label">键名</label>
+                                    <input type="text" id="getKey" class="form-control" placeholder="输入键名">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="getValue" class="form-label">查询结果</label>
+                                    <div id="getValue" class="form-control" style="height: auto; min-height: 38px;"></div>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button id="getValueBtn" class="btn btn-primary w-100">
+                                        <div class="spinner-border spinner-border-sm loading" id="getValueLoading" role="status">
+                                            <span class="visually-hidden">加载中...</span>
+                                        </div>
+                                        获取
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Delete操作 -->
+                        <div>
+                            <div class="row g-3">
+                                <div class="col-md-10">
+                                    <label for="deleteKey" class="form-label">键名</label>
+                                    <input type="text" id="deleteKey" class="form-control" placeholder="输入键名">
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button id="deleteValueBtn" class="btn btn-danger w-100">
+                                        <div class="spinner-border spinner-border-sm loading" id="deleteValueLoading" role="status">
+                                            <span class="visually-hidden">加载中...</span>
+                                        </div>
+                                        删除
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="result-box" id="kvOpResult"></div>
+                </div>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <p>Powered by Spring Boot + Redis + Redisson</p>
+            <p>© 2025 CMK Redis监控面板 v1.0</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 模拟数据仪表盘的刷新
+            document.getElementById('refresh-dashboard').addEventListener('click', function() {
+                const statCards = document.querySelectorAll('.stat-card');
+                
+                statCards.forEach(card => {
+                    const loadingHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    card.querySelector('.stat-value').innerHTML = loadingHTML;
+                    
+                    setTimeout(() => {
+                        // 模拟随机数据变化
+                        const randomValue = Math.floor(Math.random() * 20) + 1;
+                        const randomChange = (Math.random() * 3).toFixed(1);
+                        const isPositive = Math.random() > 0.5;
+                        
+                        card.querySelector('.stat-value').textContent = card.classList.contains('bg-memory') 
+                            ? randomValue + 'MB' 
+                            : card.classList.contains('bg-latency')
+                                ? randomValue + 'ms'
+                                : randomValue;
+                        
+                        const changeEl = card.querySelector('.stat-change');
+                        changeEl.innerHTML = isPositive 
+                            ? `<i class="fas fa-arrow-up me-1"></i> ${randomChange}%`
+                            : `<i class="fas fa-arrow-down me-1"></i> ${randomChange}%`;
+                        
+                        changeEl.className = isPositive 
+                            ? 'stat-change positive' 
+                            : 'stat-change negative';
+                    }, 800);
+                });
+            });
+        });
+
+        // 通用请求函数
+        async function makeRequest(url, loadingEl, resultEl) {
+            try {
+                loadingEl.style.display = 'inline-block';
+                loadingEl.parentElement.disabled = true;
+                
+                const response = await fetch(url);
+                const data = await response.text();
+                resultEl.innerText = data;
+                resultEl.style.color = response.ok ? '#28a745' : '#dc3545';
+            } catch (error) {
+                resultEl.innerText = '错误: ' + error.message;
+                resultEl.style.color = '#dc3545';
+            } finally {
+                loadingEl.style.display = 'none';
+                loadingEl.parentElement.disabled = false;
+            }
+        }
+
+        // 测试连接
+        document.getElementById('testConnection').addEventListener('click', () => {
+            const loadingEl = document.getElementById('testConnectionLoading');
+            const resultEl = document.getElementById('connectionResult');
+            makeRequest('/redis/test', loadingEl, resultEl);
+        });
+
+        // 测试分布式锁
+        document.getElementById('testLock').addEventListener('click', () => {
+            const loadingEl = document.getElementById('testLockLoading');
+            const resultEl = document.getElementById('connectionResult');
+            makeRequest('/redis/lock', loadingEl, resultEl);
+        });
+
+        // 设置键值
+        document.getElementById('setValue').addEventListener('click', () => {
+            const key = document.getElementById('key').value;
+            const value = document.getElementById('value').value;
+            const loadingEl = document.getElementById('setValueLoading');
+            const resultEl = document.getElementById('kvOpResult');
+            
+            if (!key || !value) {
+                resultEl.innerText = '键和值不能为空';
+                resultEl.style.color = '#dc3545';
+                return;
+            }
+            
+            makeRequest(`/redis/set/${encodeURIComponent(key)}/${encodeURIComponent(value)}`, loadingEl, resultEl);
+        });
+
+        // 获取值
+        document.getElementById('getValueBtn').addEventListener('click', () => {
+            const key = document.getElementById('getKey').value;
+            const loadingEl = document.getElementById('getValueLoading');
+            const resultEl = document.getElementById('getValue');
+            const opResultEl = document.getElementById('kvOpResult');
+            
+            if (!key) {
+                opResultEl.innerText = '键不能为空';
+                opResultEl.style.color = '#dc3545';
+                return;
+            }
+            
+            makeRequest(`/redis/get/${encodeURIComponent(key)}`, loadingEl, resultEl);
+            opResultEl.innerText = '';
+        });
+
+        // 删除键
+        document.getElementById('deleteValueBtn').addEventListener('click', () => {
+            const key = document.getElementById('deleteKey').value;
+            const loadingEl = document.getElementById('deleteValueLoading');
+            const resultEl = document.getElementById('kvOpResult');
+            
+            if (!key) {
+                resultEl.innerText = '键不能为空';
+                resultEl.style.color = '#dc3545';
+                return;
+            }
+            
+            makeRequest(`/redis/delete/${encodeURIComponent(key)}`, loadingEl, resultEl);
+        });
+    </script>
+</body>
+</html> 

@@ -1,14 +1,9 @@
-package org.example.controller;
-
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.servlet.ModelAndView;
-
-@Controller
-public class HomeController {
-    
-    @GetMapping("/")
-    public ModelAndView home() {
-        return new ModelAndView("forward:/index.html");
-    }
-} 
+// 此控制器已被PageController替代，可以删除
+// @Controller
+// public class HomeController {
+//     
+//     @GetMapping("/")
+//     public ModelAndView home() {
+//         return new ModelAndView("forward:/index.html");
+//     }
+// } 

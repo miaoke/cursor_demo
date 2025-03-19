@@ -10,7 +10,7 @@ public interface UserMapper {
     int insert(User user);
     
     // 根据ID查询用户
-    User selectById(Integer userId);
+    User selectById(Long userId);
     
     // 查询所有用户
     List<User> selectAll();
@@ -19,7 +19,7 @@ public interface UserMapper {
     int update(User user);
     
     // 删除用户
-    int delete(Integer userId);
+    int delete(Long userId);
     
     // 根据用户名查询用户
     User selectByUsername(String username);
