@@ -24,6 +24,12 @@ public interface UserMapper {
     // 根据用户名查询用户
     User selectByUsername(String username);
     
+    // 根据用户名查询所有匹配的用户
+    List<User> selectAllByUsername(String username);
+    
     // 根据邮箱查询用户
     User selectByEmail(String email);
+    
+    // 根据邮箱查询所有匹配的用户
+    List<User> selectAllByEmail(String email);
 } 

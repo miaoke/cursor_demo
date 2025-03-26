@@ -17,10 +17,14 @@
         order_id, user_id, amount, status, UNIX_TIMESTAMP(created_at) * 1000 as created_at
     </sql>
 
-    <!-- 插入订单 -->
+    <!-- 插入订单（存在则更新） -->
     <insert id="insert" parameterType="org.example.entity.Order" useGeneratedKeys="true" keyProperty="orderId">
         INSERT INTO orders(user_id, amount, status, created_at)
         VALUES(#{userId,jdbcType=BIGINT}, #{amount}, #{status}, FROM_UNIXTIME(#{createdAt}/1000))
+        ON DUPLICATE KEY UPDATE
+            amount = VALUES(amount),
+            status = VALUES(status),
+            created_at = IF(created_at IS NULL, VALUES(created_at), created_at)
     </insert>
 
     <!-- 根据ID查询订单 -->

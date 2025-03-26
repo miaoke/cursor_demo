@@ -15,10 +15,13 @@
         id, name, create_time
     </sql>
 
-    <!-- 插入数据 -->
+    <!-- 插入数据（存在则更新） -->
     <insert id="insert" parameterType="org.example.entity.TestTable" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO test_table(name, create_time)
         VALUES(#{name}, NOW())
+        ON DUPLICATE KEY UPDATE
+            name = VALUES(name),
+            create_time = IF(create_time IS NULL, NOW(), create_time)
     </insert>
 
     <!-- 根据ID查询 -->

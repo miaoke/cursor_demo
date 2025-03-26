@@ -149,13 +149,27 @@ public class UserServiceImpl implements UserService {
     public User getUserByUsername(String username) {
         // 直接从数据库获取，不使用缓存
         // 如需缓存，可以考虑用username为key建立索引缓存
-        return userMapper.selectByUsername(username);
+        try {
+            return userMapper.selectByUsername(username);
+        } catch (org.apache.ibatis.exceptions.TooManyResultsException e) {
+            // 处理多个结果的情况，获取所有匹配的用户，返回第一个
+            log.warn("用户名 {} 存在多个用户记录，将返回第一个结果", username);
+            List<User> users = userMapper.selectAllByUsername(username);
+            return users != null && !users.isEmpty() ? users.get(0) : null;
+        }
     }
 
     @Override
     public User getUserByEmail(String email) {
         // 直接从数据库获取，不使用缓存
         // 如需缓存，可以考虑用email为key建立索引缓存
-        return userMapper.selectByEmail(email);
+        try {
+            return userMapper.selectByEmail(email);
+        } catch (org.apache.ibatis.exceptions.TooManyResultsException e) {
+            // 处理多个结果的情况，获取所有匹配的用户，返回第一个
+            log.warn("邮箱 {} 存在多个用户记录，将返回第一个结果", email);
+            List<User> users = userMapper.selectAllByEmail(email);
+            return users != null && !users.isEmpty() ? users.get(0) : null;
+        }
     }
 } 

@@ -7,14 +7,76 @@
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            padding: 0;
-            margin: 0;
-            background-color: transparent;
-            font-family: "Microsoft YaHei", sans-serif;
+        :root {
+            --primary-color: #3D7FFF;
+            --secondary-color: #6c757d;
+            --success-color: #38D399;
+            --info-color: #00C1DE;
+            --warning-color: #FFBA2D;
+            --danger-color: #FF6868;
+            --dark-color: #2C3E50;
+            --light-color: #f8f9fa;
+            --border-radius: 8px;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
         }
-        .container-fluid {
+        
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #F4F7FC;
+        }
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            background-color: var(--dark-color);
+            color: white;
+        }
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 48px);
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .nav-link {
+            color: #ced4da;
+            font-weight: 500;
+            padding: .75rem 1.25rem;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        .nav-link:hover {
+            color: #fff;
+            background-color: rgba(255, 255, 255, .1);
+            border-left: 3px solid rgba(255, 255, 255, 0.5);
+        }
+        .nav-link.active {
+            color: #fff;
+            background-color: rgba(61, 127, 255, 0.2);
+            border-left: 3px solid var(--primary-color);
+        }
+        .nav-link i {
+            margin-right: 10px;
+        }
+        .main-header {
+            background: var(--dark-color);
+            color: white;
             padding: 0;
+            position: fixed;
+            width: 100%;
+            z-index: 99;
+            height: 48px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .content-wrapper {
+            margin-left: 250px;
+            margin-top: 48px;
+            padding: 20px;
         }
         .card {
             border-radius: 0.25rem;
@@ -51,140 +113,226 @@
             background-color: #cff4fc;
             border-color: #b6effb;
         }
+        .cmk-logo {
+            background: linear-gradient(45deg, #3D7FFF, #00C1DE);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cmk-logo::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary-color), #00C1DE);
+            opacity: 0.15;
+            border-radius: 4px;
+            z-index: -1;
+            padding: 2px 6px;
+            margin: -2px -6px;
+        }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i> 本系统演示了ShardingSphere-JDBC分表和全局表的功能
+    <!-- 顶部导航 -->
+    <header class="main-header">
+        <nav class="navbar navbar-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">分表示例系统</a>
+                <div class="dropdown ms-3">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user me-1"></i>
+                        <span id="current-username">用户</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>设置</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>退出登录</a></li>
+                    </ul>
                 </div>
             </div>
-        </div>
+        </nav>
+    </header>
 
-        <div class="row">
-            <div class="col-12">
-                <h2 class="section-title"><i class="fas fa-cogs me-2"></i> 分表配置信息</h2>
-            </div>
+    <!-- 侧边栏 -->
+    <div class="sidebar" style="width: 250px;">
+        <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="/" id="dashboard-link">
+                        <i class="fas fa-tachometer-alt"></i> 数据看板
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/user" id="users-link">
+                        <i class="fas fa-users"></i> 用户管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/order" id="orders-link">
+                        <i class="fas fa-shopping-cart"></i> 订单管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/test" id="test-link">
+                        <i class="fas fa-vial"></i> 测试表管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="/system-info" id="system-info-link">
+                        <i class="fas fa-info-circle"></i> 系统信息
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="http://localhost:8082/redis_test.html" id="redis-test-link">
+                        <i class="fas fa-database"></i> 
+                        <span class="cmk-logo">CMK</span> Redis监控
+                    </a>
+                </li>
+            </ul>
         </div>
+    </div>
 
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-users me-2"></i> 用户表分表规则</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>根据user_id取模分成5个表（users_0至users_4）</p>
-                        <div class="config-code mb-3">
-                            spring.shardingsphere.rules.sharding.tables.users.table-strategy.standard.sharding-column=user_id
-                            
-                            spring.shardingsphere.rules.sharding.sharding-algorithms.users_inline.props.algorithm-expression=users_$->{user_id % 5}
-                        </div>
-                        <div class="alert alert-warning">
-                            <strong>分表说明：</strong> 用户ID对5取模，根据结果将数据分散到5个物理表中
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-shopping-cart me-2"></i> 订单表分表规则</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>根据user_id取模分成5个表（orders_0至orders_4）</p>
-                        <div class="config-code mb-3">
-                            spring.shardingsphere.rules.sharding.tables.orders.table-strategy.standard.sharding-column=user_id
-                            
-                            spring.shardingsphere.rules.sharding.sharding-algorithms.orders_inline.props.algorithm-expression=orders_$->{user_id % 5}
-                        </div>
-                        <div class="alert alert-warning">
-                            <strong>分表说明：</strong> 使用与用户表相同的分片键，确保相关数据位于同一个数据节点上
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-vial me-2"></i> 测试表配置</h5>
-                    </div>
-                    <div class="card-body">
-                        <p>配置为ShardingSphere-JDBC全局表，所有数据源中都存在完整副本</p>
-                        <div class="config-code mb-3">
-                            spring.shardingsphere.rules.sharding.tables.test_table.actual-data-nodes=ds0.test_table
-                            
-                            spring.shardingsphere.rules.sharding.broadcast-tables=test_table
-                        </div>
-                        <div class="alert alert-warning">
-                            <strong>全局表说明：</strong> 主要用于配置信息或字典表等数据量不大且需要与海量数据表关联查询的场景
-                        </div>
+    <!-- 主内容区 -->
+    <div class="content-wrapper">
+        <div class="container-fluid">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i> 本系统演示了ShardingSphere-JDBC分表和全局表的功能
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="row mt-4">
-            <div class="col-12">
-                <h2 class="section-title"><i class="fas fa-project-diagram me-2"></i> 系统架构</h2>
+            <div class="row">
+                <div class="col-12">
+                    <h2 class="section-title"><i class="fas fa-cogs me-2"></i> 分表配置信息</h2>
+                </div>
             </div>
-        </div>
 
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-database me-2"></i> 数据库配置</h5>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-users me-2"></i> 用户表分表规则</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>根据user_id取模分成5个表（users_0至users_4）</p>
+                            <div class="config-code mb-3">
+                                spring.shardingsphere.rules.sharding.tables.users.table-strategy.standard.sharding-column=user_id
+                                
+                                spring.shardingsphere.rules.sharding.sharding-algorithms.users_inline.props.algorithm-expression=users_$->{user_id % 5}
+                            </div>
+                            <div class="alert alert-warning">
+                                <strong>分表说明：</strong> 用户ID对5取模，根据结果将数据分散到5个物理表中
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <ul class="list-group">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                数据库类型
-                                <span class="badge bg-primary rounded-pill">MySQL</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                连接池
-                                <span class="badge bg-primary rounded-pill">HikariCP</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                分表中间件
-                                <span class="badge bg-primary rounded-pill">ShardingSphere-JDBC</span>
-                            </li>
-                        </ul>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-shopping-cart me-2"></i> 订单表分表规则</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>根据user_id取模分成5个表（orders_0至orders_4）</p>
+                            <div class="config-code mb-3">
+                                spring.shardingsphere.rules.sharding.tables.orders.table-strategy.standard.sharding-column=user_id
+                                
+                                spring.shardingsphere.rules.sharding.sharding-algorithms.orders_inline.props.algorithm-expression=orders_$->{user_id % 5}
+                            </div>
+                            <div class="alert alert-warning">
+                                <strong>分表说明：</strong> 使用与用户表相同的分片键，确保相关数据位于同一个数据节点上
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5><i class="fas fa-code me-2"></i> 技术栈</h5>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-vial me-2"></i> 测试表配置</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>配置为ShardingSphere-JDBC全局表，所有数据源中都存在完整副本</p>
+                            <div class="config-code mb-3">
+                                spring.shardingsphere.rules.sharding.tables.test_table.actual-data-nodes=ds0.test_table
+                                
+                                spring.shardingsphere.rules.sharding.broadcast-tables=test_table
+                            </div>
+                            <div class="alert alert-warning">
+                                <strong>全局表说明：</strong> 主要用于配置信息或字典表等数据量不大且需要与海量数据表关联查询的场景
+                            </div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <ul class="list-group">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                后端框架
-                                <span class="badge bg-primary rounded-pill">Spring Boot</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                ORM框架
-                                <span class="badge bg-primary rounded-pill">MyBatis</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                前端框架
-                                <span class="badge bg-primary rounded-pill">Bootstrap 5</span>
-                            </li>
-                        </ul>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h2 class="section-title"><i class="fas fa-project-diagram me-2"></i> 系统架构</h2>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-database me-2"></i> 数据库配置</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    数据库类型
+                                    <span class="badge bg-primary rounded-pill">MySQL</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    连接池
+                                    <span class="badge bg-primary rounded-pill">HikariCP</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    分表中间件
+                                    <span class="badge bg-primary rounded-pill">ShardingSphere-JDBC</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-code me-2"></i> 技术栈</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    后端框架
+                                    <span class="badge bg-primary rounded-pill">Spring Boot</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    ORM框架
+                                    <span class="badge bg-primary rounded-pill">MyBatis</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    前端框架
+                                    <span class="badge bg-primary rounded-pill">Bootstrap 5</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.2.3/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script>
         // 如果在iframe中，通知父窗口调整高度
         if (window.parent && window.parent !== window) {
@@ -197,6 +345,22 @@
                 }, 100);
             });
         }
+        
+        // 获取当前登录用户
+        document.addEventListener('DOMContentLoaded', function() {
+            // 尝试从 localStorage 获取用户名
+            const storedUsername = localStorage.getItem('currentUsername');
+            if (storedUsername) {
+                document.getElementById('current-username').textContent = storedUsername;
+            }
+            
+            // 退出登录
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('currentUsername');
+                window.location.href = '/login.html';
+            });
+        });
     </script>
 </body>
 </html> 

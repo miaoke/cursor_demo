@@ -19,10 +19,14 @@
         UNIX_TIMESTAMP(last_login_time) * 1000 as last_login_time
     </sql>
 
-    <!-- 插入用户 -->
+    <!-- 插入用户（存在则更新） -->
     <insert id="insert" parameterType="org.example.entity.User" useGeneratedKeys="true" keyProperty="userId">
         INSERT INTO users (username, email, password, created_at)
         VALUES (#{username}, #{email}, #{password}, FROM_UNIXTIME(#{createdAt}/1000))
+        ON DUPLICATE KEY UPDATE 
+            email = VALUES(email),
+            password = VALUES(password),
+            created_at = IF(created_at IS NULL, VALUES(created_at), created_at)
     </insert>
 
     <!-- 根据ID查询用户 -->
@@ -67,8 +71,24 @@
         WHERE username = #{username}
     </select>
 
+    <!-- 根据用户名查询所有匹配的用户 -->
+    <select id="selectAllByUsername" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM users
+        WHERE username = #{username}
+    </select>
+
     <!-- 根据邮箱查询用户 -->
     <select id="selectByEmail" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM users
+        WHERE email = #{email}
+    </select>
+
+    <!-- 根据邮箱查询所有匹配的用户 -->
+    <select id="selectAllByEmail" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>
         FROM users

@@ -33,10 +33,39 @@ public class TestDataRunner implements CommandLineRunner {
     public void run(String... args) throws Exception {
         try {
             System.out.println("============ 正在执行测试数据生成 ============");
+            // 创建admin用户
+            createAdminUser();
+            // 创建普通测试用户
             generateBatchData(10, 5);
             System.out.println("============ 测试数据生成完成 ============");
         } catch (Exception e) {
             System.err.println("数据生成过程中发生错误: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * 创建管理员用户
+     */
+    private void createAdminUser() {
+        try {
+            // 检查admin用户是否已存在
+            User existingAdmin = userService.getUserByUsername("admin");
+            if (existingAdmin == null) {
+                User adminUser = new User();
+                adminUser.setUsername("admin");
+                adminUser.setEmail("admin@example.com");
+                // 使用明确指定的管理员密码"admin123"
+                adminUser.setPassword(PasswordUtil.encryptPassword("admin123"));
+                adminUser.setCreatedAt(System.currentTimeMillis());
+                
+                adminUser = userService.createUser(adminUser);
+                System.out.println("创建管理员用户成功: " + adminUser.getUsername() + ", ID: " + adminUser.getUserId());
+            } else {
+                System.out.println("管理员用户已存在，跳过创建");
+            }
+        } catch (Exception e) {
+            System.err.println("创建管理员用户失败: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -49,10 +78,31 @@ public class TestDataRunner implements CommandLineRunner {
         
         try {
             for (int i = 0; i < userCount; i++) {
-                User user = createRandomUser(i);
-                user = userService.createUser(user);
-                System.out.println("创建用户: " + user.getUsername() + ", ID: " + user.getUserId());
+                String username = "测试用户_" + i;
                 
+                // 检查用户是否已存在
+                User existingUser = null;
+                try {
+                    existingUser = userService.getUserByUsername(username);
+                } catch (Exception e) {
+                    System.err.println("查询用户时出错: " + e.getMessage());
+                    // 继续执行，创建新用户
+                }
+                
+                User user;
+                
+                if (existingUser == null) {
+                    // 创建新用户
+                    user = createRandomUser(i);
+                    user = userService.createUser(user);
+                    System.out.println("创建用户: " + user.getUsername() + ", ID: " + user.getUserId());
+                } else {
+                    // 使用已存在的用户
+                    user = existingUser;
+                    System.out.println("用户已存在，跳过创建: " + user.getUsername() + ", ID: " + user.getUserId());
+                }
+                
+                // 创建用户订单
                 for (int j = 0; j < ordersPerUser; j++) {
                     try {
                         Order order = createRandomOrder(user.getUserId());
@@ -63,8 +113,8 @@ public class TestDataRunner implements CommandLineRunner {
                     }
                 }
                 
-                if (i % 10 == 0) {
-                    System.out.println("已生成 " + i + " 个用户和 " + (i * ordersPerUser) + " 个订单");
+                if (i % 10 == 0 && i > 0) {
+                    System.out.println("已处理 " + i + " 个用户");
                 }
             }
         } catch (Exception e) {

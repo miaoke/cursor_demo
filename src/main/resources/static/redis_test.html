@@ -26,10 +26,66 @@
             color: #333;
         }
         
+        .sidebar {
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 100;
+            padding: 48px 0 0;
+            box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+            background-color: var(--dark-color);
+            color: white;
+        }
+        .sidebar-sticky {
+            position: relative;
+            top: 0;
+            height: calc(100vh - 48px);
+            padding-top: .5rem;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        .nav-link {
+            color: #ced4da;
+            font-weight: 500;
+            padding: .75rem 1.25rem;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+        .nav-link:hover {
+            color: #fff;
+            background-color: rgba(255, 255, 255, .1);
+            border-left: 3px solid rgba(255, 255, 255, 0.5);
+        }
+        .nav-link.active {
+            color: #fff;
+            background-color: rgba(61, 127, 255, 0.2);
+            border-left: 3px solid var(--primary-color);
+        }
+        .nav-link i {
+            margin-right: 10px;
+        }
+        
+        .main-header {
+            background: var(--dark-color);
+            color: white;
+            padding: 0;
+            position: fixed;
+            width: 100%;
+            z-index: 99;
+            height: 48px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .content-wrapper {
+            margin-left: 250px;
+            margin-top: 48px;
+            padding: 20px;
+        }
+        
         .container {
             max-width: 1200px;
-            margin-top: 20px;
-            padding: 0 20px;
+            padding: 20px;
         }
         
         .dashboard-header {
@@ -248,225 +304,293 @@
         }
         
         .btn-success:hover {
-            background-color: #2EBB84;
-            border-color: #2EBB84;
+            background-color: #33BD8A;
+            border-color: #33BD8A;
         }
         
-        .btn-info {
-            background-color: var(--info-color);
-            border-color: var(--info-color);
-            color: white;
-        }
-        
-        .btn-info:hover {
-            background-color: #00A7C0;
-            border-color: #00A7C0;
-            color: white;
-        }
-        
-        .btn-danger {
-            background-color: var(--danger-color);
-            border-color: var(--danger-color);
-        }
-        
-        .btn-danger:hover {
-            background-color: #E55C5C;
-            border-color: #E55C5C;
-        }
-        
-        .result-box {
-            min-height: 100px;
-            padding: 15px;
+        .response-area {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
             border-radius: 6px;
-            background-color: #F8FAFC;
-            border: 1px solid #e9ecef;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 0.875rem;
-            overflow: auto;
+            padding: 15px;
             margin-top: 15px;
-        }
-        
-        .loading {
-            display: none;
-            margin-right: 8px;
-            width: 16px;
-            height: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
         }
         
         .footer {
             text-align: center;
-            padding: 20px 0;
-            color: #9aa2af;
-            font-size: 0.875rem;
-            margin-top: 20px;
+            margin-top: 30px;
+            padding-top: 20px;
             border-top: 1px solid #eaeaea;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+        
+        .cmk-logo {
+            background: linear-gradient(45deg, #3D7FFF, #00C1DE);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cmk-logo::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, var(--primary-color), #00C1DE);
+            opacity: 0.15;
+            border-radius: 4px;
+            z-index: -1;
+            padding: 2px 6px;
+            margin: -2px -6px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="dashboard-header">
-            <div class="d-flex justify-content-between align-items-center">
+    <!-- 顶部导航 -->
+    <header class="main-header">
+        <nav class="navbar navbar-dark">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">分表示例系统</a>
+                <div class="dropdown ms-3">
+                    <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user me-1"></i>
+                        <span id="current-username">用户</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-cog me-2"></i>设置</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logout-btn"><i class="fas fa-sign-out-alt me-2"></i>退出登录</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 侧边栏 -->
+    <div class="sidebar" style="width: 250px;">
+        <div class="sidebar-sticky">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" href="http://localhost:8082/" id="dashboard-link">
+                        <i class="fas fa-tachometer-alt"></i> 数据看板
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="http://localhost:8082/user" id="users-link">
+                        <i class="fas fa-users"></i> 用户管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="http://localhost:8082/order" id="orders-link">
+                        <i class="fas fa-shopping-cart"></i> 订单管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="http://localhost:8082/test" id="test-link">
+                        <i class="fas fa-vial"></i> 测试表管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="http://localhost:8082/system-info" id="system-info-link">
+                        <i class="fas fa-info-circle"></i> 系统信息
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" href="http://localhost:8082/redis_test.html" id="redis-test-link">
+                        <i class="fas fa-database"></i> 
+                        <span class="cmk-logo">CMK</span> Redis监控
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="content-wrapper">
+        <div class="container-fluid">
+            <div class="dashboard-header">
                 <div class="logo-container">
                     <div class="logo">
-                        <span class="logo-text">CMK</span>
+                        <div class="logo-text">CMK</div>
                     </div>
                     <div class="dashboard-title">
                         <h1>Redis监控面板</h1>
-                        <p>分布式缓存监控与操作工具</p>
+                        <p>测试Redis连接和分布式锁功能</p>
                     </div>
                 </div>
-                <div>
-                    <button class="btn btn-sm btn-outline-secondary" id="refresh-dashboard">
-                        <i class="fas fa-sync-alt me-1"></i> 刷新
-                    </button>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="stats-cards">
+                <div class="stat-card bg-connection">
+                    <div class="stat-icon">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <div class="stat-title">连接状态</div>
+                    <div class="stat-value" id="connection-status">-</div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-circle me-1"></i> <span id="connection-time">-</span>
+                    </div>
+                </div>
+                <div class="stat-card bg-memory">
+                    <div class="stat-icon">
+                        <i class="fas fa-memory"></i>
+                    </div>
+                    <div class="stat-title">内存使用</div>
+                    <div class="stat-value" id="memory-usage">-</div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-check-circle me-1"></i> <span>健康</span>
+                    </div>
+                </div>
+                <div class="stat-card bg-keys">
+                    <div class="stat-icon">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div class="stat-title">密钥总数</div>
+                    <div class="stat-value" id="total-keys">-</div>
+                    <div class="stat-change">
+                        <i class="fas fa-sync me-1"></i> <span>已同步</span>
+                    </div>
+                </div>
+                <div class="stat-card bg-latency">
+                    <div class="stat-icon">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <div class="stat-title">操作延迟</div>
+                    <div class="stat-value" id="operation-latency">-</div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-arrow-down me-1"></i> <span>5%</span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="stats-cards">
-            <div class="stat-card bg-connection">
-                <div class="stat-icon"><i class="fas fa-plug"></i></div>
-                <div class="stat-title">连接状态</div>
-                <div class="stat-value">3</div>
-                <div class="stat-change positive"><i class="fas fa-arrow-up me-1"></i> 1.5%</div>
-            </div>
-            <div class="stat-card bg-ops">
-                <div class="stat-icon"><i class="fas fa-bolt"></i></div>
-                <div class="stat-title">每秒操作数</div>
-                <div class="stat-value">7</div>
-                <div class="stat-change negative"><i class="fas fa-arrow-down me-1"></i> 2.0%</div>
-            </div>
-            <div class="stat-card bg-memory">
-                <div class="stat-icon"><i class="fas fa-memory"></i></div>
-                <div class="stat-title">内存使用</div>
-                <div class="stat-value">8MB</div>
-                <div class="stat-change positive"><i class="fas fa-arrow-up me-1"></i> 1.2%</div>
-            </div>
-            <div class="stat-card bg-keys">
-                <div class="stat-icon"><i class="fas fa-key"></i></div>
-                <div class="stat-title">键总数</div>
-                <div class="stat-value">18</div>
-                <div class="stat-change negative"><i class="fas fa-arrow-down me-1"></i> 0.8%</div>
-            </div>
-            <div class="stat-card bg-clients">
-                <div class="stat-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-title">客户端连接</div>
-                <div class="stat-value">8</div>
-                <div class="stat-change negative"><i class="fas fa-arrow-down me-1"></i> 1.5%</div>
-            </div>
-            <div class="stat-card bg-latency">
-                <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                <div class="stat-title">平均延迟</div>
-                <div class="stat-value">13ms</div>
-                <div class="stat-change positive"><i class="fas fa-arrow-up me-1"></i> 0.5%</div>
-            </div>
-        </div>
-
-        <div class="dashboard-panels">
-            <div class="panel">
-                <div class="panel-header">
-                    <h3 class="panel-title"><i class="fas fa-tachometer-alt"></i> 连接测试</h3>
-                </div>
-                <div class="panel-body">
-                    <p class="text-muted mb-3">测试与Redis服务器的连接状态，验证Lettuce和Redisson客户端可用性。</p>
-                    <div class="d-flex gap-3">
-                        <button id="testConnection" class="btn btn-primary">
-                            <div class="spinner-border spinner-border-sm loading" id="testConnectionLoading" role="status">
-                                <span class="visually-hidden">加载中...</span>
-                            </div>
-                            <i class="fas fa-vial me-2"></i>连接测试
+            <!-- 操作面板 -->
+            <div class="dashboard-panels">
+                <!-- 连接测试面板 -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-plug"></i> Redis连接测试
+                        </h2>
+                    </div>
+                    <div class="panel-body">
+                        <p>点击下方按钮测试Redis连接状态。</p>
+                        <button id="test-connection-btn" class="btn btn-primary">
+                            <i class="fas fa-sync-alt me-2"></i>测试连接
                         </button>
-                        <button id="testLock" class="btn btn-info">
-                            <div class="spinner-border spinner-border-sm loading" id="testLockLoading" role="status">
-                                <span class="visually-hidden">加载中...</span>
-                            </div>
-                            <i class="fas fa-lock me-2"></i>分布式锁测试
-                        </button>
+                        <div class="response-area mt-3" id="connection-response">
+                            等待操作...
+                        </div>
                     </div>
-                    <div class="result-box" id="connectionResult"></div>
+                </div>
+                
+                <!-- 分布式锁测试 -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-lock"></i> 分布式锁测试
+                        </h2>
+                    </div>
+                    <div class="panel-body">
+                        <p>测试Redisson分布式锁功能。</p>
+                        <button id="test-lock-btn" class="btn btn-success">
+                            <i class="fas fa-lock me-2"></i>测试分布式锁
+                        </button>
+                        <div class="response-area mt-3" id="lock-response">
+                            等待操作...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 字符串操作 -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-font"></i> 字符串操作
+                        </h2>
+                    </div>
+                    <div class="panel-body">
+                        <form id="string-operation-form" class="operation-form">
+                            <div class="mb-3">
+                                <label for="string-key" class="form-label">键名</label>
+                                <input type="text" class="form-control" id="string-key" placeholder="输入键名">
+                            </div>
+                            <div class="mb-3">
+                                <label for="string-value" class="form-label">值</label>
+                                <input type="text" class="form-control" id="string-value" placeholder="输入值">
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" id="set-string-btn" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>设置
+                                </button>
+                                <button type="button" id="get-string-btn" class="btn btn-outline-primary">
+                                    <i class="fas fa-search me-2"></i>获取
+                                </button>
+                                <button type="button" id="del-string-btn" class="btn btn-outline-danger">
+                                    <i class="fas fa-trash-alt me-2"></i>删除
+                                </button>
+                            </div>
+                        </form>
+                        <div class="response-area mt-3" id="string-response">
+                            等待操作...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 哈希操作 -->
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title">
+                            <i class="fas fa-hashtag"></i> 哈希操作
+                        </h2>
+                    </div>
+                    <div class="panel-body">
+                        <form id="hash-operation-form" class="operation-form">
+                            <div class="mb-3">
+                                <label for="hash-key" class="form-label">哈希键名</label>
+                                <input type="text" class="form-control" id="hash-key" placeholder="输入哈希键名">
+                            </div>
+                            <div class="mb-3">
+                                <label for="hash-field" class="form-label">字段名</label>
+                                <input type="text" class="form-control" id="hash-field" placeholder="输入字段名">
+                            </div>
+                            <div class="mb-3">
+                                <label for="hash-value" class="form-label">字段值</label>
+                                <input type="text" class="form-control" id="hash-value" placeholder="输入字段值">
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" id="set-hash-btn" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>设置
+                                </button>
+                                <button type="button" id="get-hash-btn" class="btn btn-outline-primary">
+                                    <i class="fas fa-search me-2"></i>获取
+                                </button>
+                                <button type="button" id="del-hash-btn" class="btn btn-outline-danger">
+                                    <i class="fas fa-trash-alt me-2"></i>删除
+                                </button>
+                            </div>
+                        </form>
+                        <div class="response-area mt-3" id="hash-response">
+                            等待操作...
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <h3 class="panel-title"><i class="fas fa-database"></i> 键值管理</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="operation-form">
-                        <!-- Set操作 -->
-                        <div class="mb-3">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="key" class="form-label">键名</label>
-                                    <input type="text" id="key" class="form-control" placeholder="输入键名">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="value" class="form-label">值</label>
-                                    <input type="text" id="value" class="form-control" placeholder="输入值">
-                                </div>
-                                <div class="col-md-2 d-flex align-items-end">
-                                    <button id="setValue" class="btn btn-success w-100">
-                                        <div class="spinner-border spinner-border-sm loading" id="setValueLoading" role="status">
-                                            <span class="visually-hidden">加载中...</span>
-                                        </div>
-                                        设置
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Get操作 -->
-                        <div class="mb-3">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="getKey" class="form-label">键名</label>
-                                    <input type="text" id="getKey" class="form-control" placeholder="输入键名">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="getValue" class="form-label">查询结果</label>
-                                    <div id="getValue" class="form-control" style="height: auto; min-height: 38px;"></div>
-                                </div>
-                                <div class="col-md-2 d-flex align-items-end">
-                                    <button id="getValueBtn" class="btn btn-primary w-100">
-                                        <div class="spinner-border spinner-border-sm loading" id="getValueLoading" role="status">
-                                            <span class="visually-hidden">加载中...</span>
-                                        </div>
-                                        获取
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Delete操作 -->
-                        <div>
-                            <div class="row g-3">
-                                <div class="col-md-10">
-                                    <label for="deleteKey" class="form-label">键名</label>
-                                    <input type="text" id="deleteKey" class="form-control" placeholder="输入键名">
-                                </div>
-                                <div class="col-md-2 d-flex align-items-end">
-                                    <button id="deleteValueBtn" class="btn btn-danger w-100">
-                                        <div class="spinner-border spinner-border-sm loading" id="deleteValueLoading" role="status">
-                                            <span class="visually-hidden">加载中...</span>
-                                        </div>
-                                        删除
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="result-box" id="kvOpResult"></div>
-                </div>
+            
+            <div class="footer">
+                <p>Powered by <span class="cmk-logo">CMK</span> © 2023 分表示例系统</p>
             </div>
         </div>
-        
-        <footer class="footer">
-            <p>Powered by Spring Boot + Redis + Redisson</p>
-            <p>© 2025 CMK Redis监控面板 v1.0</p>
-        </footer>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // 模拟数据仪表盘的刷新
@@ -503,44 +627,73 @@
         });
 
         // 通用请求函数
-        async function makeRequest(url, loadingEl, resultEl) {
-            try {
-                loadingEl.style.display = 'inline-block';
-                loadingEl.parentElement.disabled = true;
-                
-                const response = await fetch(url);
-                const data = await response.text();
-                resultEl.innerText = data;
-                resultEl.style.color = response.ok ? '#28a745' : '#dc3545';
-            } catch (error) {
-                resultEl.innerText = '错误: ' + error.message;
-                resultEl.style.color = '#dc3545';
-            } finally {
-                loadingEl.style.display = 'none';
-                loadingEl.parentElement.disabled = false;
+        function makeRequest(url, loadingEl, resultEl) {
+            if (typeof loadingEl === 'string') {
+                loadingEl = document.getElementById(loadingEl);
             }
+            
+            if (typeof resultEl === 'string') {
+                resultEl = document.getElementById(resultEl);
+            }
+            
+            if (!loadingEl || !resultEl) {
+                console.error('加载元素或结果元素不存在');
+                return;
+            }
+            
+            loadingEl.style.display = 'block';
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('请求失败');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    loadingEl.style.display = 'none';
+                    
+                    if (resultEl.id === 'connection-status') {
+                        if (data === 'OK') {
+                            resultEl.innerHTML = '<span class="badge bg-success">已连接</span>';
+                        } else {
+                            resultEl.innerHTML = '<span class="badge bg-warning">未知状态</span>';
+                        }
+                    } else {
+                        resultEl.innerHTML = `<div class="alert alert-success">${data}</div>`;
+                    }
+                })
+                .catch(error => {
+                    loadingEl.style.display = 'none';
+                    
+                    if (resultEl.id === 'connection-status') {
+                        resultEl.innerHTML = '<span class="badge bg-danger">连接失败</span>';
+                    } else {
+                        resultEl.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+                    }
+                });
         }
 
         // 测试连接
-        document.getElementById('testConnection').addEventListener('click', () => {
-            const loadingEl = document.getElementById('testConnectionLoading');
-            const resultEl = document.getElementById('connectionResult');
-            makeRequest('/redis/test', loadingEl, resultEl);
+        document.getElementById('test-connection-btn').addEventListener('click', () => {
+            const loadingEl = document.getElementById('connection-response');
+            const resultEl = document.getElementById('connection-status');
+            makeRequest('redis/test', loadingEl, resultEl);
         });
 
         // 测试分布式锁
-        document.getElementById('testLock').addEventListener('click', () => {
-            const loadingEl = document.getElementById('testLockLoading');
-            const resultEl = document.getElementById('connectionResult');
-            makeRequest('/redis/lock', loadingEl, resultEl);
+        document.getElementById('test-lock-btn').addEventListener('click', () => {
+            const loadingEl = document.getElementById('lock-response');
+            const resultEl = document.getElementById('connection-status');
+            makeRequest('redis/lock', loadingEl, resultEl);
         });
 
         // 设置键值
-        document.getElementById('setValue').addEventListener('click', () => {
-            const key = document.getElementById('key').value;
-            const value = document.getElementById('value').value;
-            const loadingEl = document.getElementById('setValueLoading');
-            const resultEl = document.getElementById('kvOpResult');
+        document.getElementById('set-string-btn').addEventListener('click', () => {
+            const key = document.getElementById('string-key').value;
+            const value = document.getElementById('string-value').value;
+            const loadingEl = document.getElementById('string-response');
+            const resultEl = document.getElementById('string-response');
             
             if (!key || !value) {
                 resultEl.innerText = '键和值不能为空';
@@ -552,11 +705,11 @@
         });
 
         // 获取值
-        document.getElementById('getValueBtn').addEventListener('click', () => {
-            const key = document.getElementById('getKey').value;
-            const loadingEl = document.getElementById('getValueLoading');
-            const resultEl = document.getElementById('getValue');
-            const opResultEl = document.getElementById('kvOpResult');
+        document.getElementById('get-string-btn').addEventListener('click', () => {
+            const key = document.getElementById('string-key').value;
+            const loadingEl = document.getElementById('string-response');
+            const resultEl = document.getElementById('string-response');
+            const opResultEl = document.getElementById('string-response');
             
             if (!key) {
                 opResultEl.innerText = '键不能为空';
@@ -569,10 +722,10 @@
         });
 
         // 删除键
-        document.getElementById('deleteValueBtn').addEventListener('click', () => {
-            const key = document.getElementById('deleteKey').value;
-            const loadingEl = document.getElementById('deleteValueLoading');
-            const resultEl = document.getElementById('kvOpResult');
+        document.getElementById('del-string-btn').addEventListener('click', () => {
+            const key = document.getElementById('string-key').value;
+            const loadingEl = document.getElementById('string-response');
+            const resultEl = document.getElementById('string-response');
             
             if (!key) {
                 resultEl.innerText = '键不能为空';
@@ -581,6 +734,138 @@
             }
             
             makeRequest(`/redis/delete/${encodeURIComponent(key)}`, loadingEl, resultEl);
+        });
+
+        // 设置哈希值
+        document.getElementById('set-hash-btn').addEventListener('click', () => {
+            const key = document.getElementById('hash-key').value;
+            const field = document.getElementById('hash-field').value;
+            const value = document.getElementById('hash-value').value;
+            const loadingEl = document.getElementById('hash-response');
+            const resultEl = document.getElementById('hash-response');
+            
+            if (!key || !field || !value) {
+                resultEl.innerText = '键、字段名和值不能为空';
+                resultEl.style.color = '#dc3545';
+                return;
+            }
+            
+            makeRequest(`/redis/hset/${encodeURIComponent(key)}/${encodeURIComponent(field)}/${encodeURIComponent(value)}`, loadingEl, resultEl);
+        });
+
+        // 获取哈希值
+        document.getElementById('get-hash-btn').addEventListener('click', () => {
+            const key = document.getElementById('hash-key').value;
+            const field = document.getElementById('hash-field').value;
+            const loadingEl = document.getElementById('hash-response');
+            const resultEl = document.getElementById('hash-response');
+            const opResultEl = document.getElementById('hash-response');
+            
+            if (!key || !field) {
+                opResultEl.innerText = '键和字段名不能为空';
+                opResultEl.style.color = '#dc3545';
+                return;
+            }
+            
+            makeRequest(`/redis/hget/${encodeURIComponent(key)}/${encodeURIComponent(field)}`, loadingEl, resultEl);
+            opResultEl.innerText = '';
+        });
+
+        // 删除哈希字段
+        document.getElementById('del-hash-btn').addEventListener('click', () => {
+            const key = document.getElementById('hash-key').value;
+            const field = document.getElementById('hash-field').value;
+            const loadingEl = document.getElementById('hash-response');
+            const resultEl = document.getElementById('hash-response');
+            
+            if (!key || !field) {
+                resultEl.innerText = '键和字段名不能为空';
+                resultEl.style.color = '#dc3545';
+                return;
+            }
+            
+            makeRequest(`/redis/hdel/${encodeURIComponent(key)}/${encodeURIComponent(field)}`, loadingEl, resultEl);
+        });
+
+        // API请求URL
+        const apiUrls = {
+            testRedis: "redis/test",
+            lockRedis: "redis/lock"
+        };
+
+        // 返回主页
+        function goToHome() {
+            window.location.href = "index.html";
+        }
+
+        // 测试Redis连接
+        function testRedisConnection() {
+            const loadingEl = document.getElementById('connection-test-loading');
+            const resultEl = document.getElementById('connection-test-result');
+            
+            loadingEl.style.display = 'block';
+            resultEl.innerHTML = '';
+            
+            fetch('redis/test')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    loadingEl.style.display = 'none';
+                    resultEl.innerHTML = `<div class="alert alert-success">连接测试成功！</div>`;
+                    document.getElementById('connection-status').textContent = '已连接';
+                    document.getElementById('connection-status').className = 'badge bg-success';
+                })
+                .catch(error => {
+                    loadingEl.style.display = 'none';
+                    resultEl.innerHTML = `<div class="alert alert-danger">连接测试失败: ${error.message}</div>`;
+                    document.getElementById('connection-status').textContent = '断开';
+                    document.getElementById('connection-status').className = 'badge bg-danger';
+                });
+        }
+        
+        // 测试Redis分布式锁
+        function testRedisLock() {
+            const loadingEl = document.getElementById('lock-test-loading');
+            const resultEl = document.getElementById('lock-test-result');
+            
+            loadingEl.style.display = 'block';
+            resultEl.innerHTML = '';
+            
+            fetch('redis/lock')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    loadingEl.style.display = 'none';
+                    resultEl.innerHTML = `<div class="alert alert-success">分布式锁测试成功: ${data}</div>`;
+                })
+                .catch(error => {
+                    loadingEl.style.display = 'none';
+                    resultEl.innerHTML = `<div class="alert alert-danger">分布式锁测试失败: ${error.message}</div>`;
+                });
+        }
+
+        // 页面加载完成后的事件
+        $(document).ready(function() {
+            // 连接测试按钮点击事件
+            $("#test-connection-btn").click(function() {
+                makeRequest('redis/test', document.getElementById('connection-response'), document.getElementById('connection-status'));
+            });
+
+            // 锁测试按钮点击事件
+            $("#test-lock-btn").click(function() {
+                makeRequest('redis/lock', document.getElementById('lock-response'), document.getElementById('lock-result'));
+            });
+
+            // 自动执行连接测试
+            makeRequest('redis/test', document.getElementById('connection-response'), document.getElementById('connection-status'));
         });
     </script>
 </body>

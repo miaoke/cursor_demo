@@ -40,14 +40,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             // 其他请求需要认证
             .anyRequest().authenticated()
             .and()
-            .formLogin()
-            .loginPage("/login.html")
-            .loginProcessingUrl("/api/auth/login")
-            .defaultSuccessUrl("/index.html")
-            .and()
-            .logout()
-            .logoutUrl("/api/auth/logout")
-            .logoutSuccessUrl("/login.html");
+            // 移除表单登录配置，防止与RESTful API冲突
+            .formLogin().disable();
     }
 
     @Override
@@ -57,25 +51,25 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new PasswordEncoder() {
             @Override
             public String encode(CharSequence rawPassword) {
-                // 不做加密，因为我们在服务层已经处理了MD5加密
-                return rawPassword.toString();
+                // 使用自定义的PasswordUtil进行加密
+                return org.example.util.PasswordUtil.encryptPassword(rawPassword.toString());
             }
 
             @Override
             public boolean matches(CharSequence rawPassword, String encodedPassword) {
-                // 不做匹配，因为我们在服务层已经处理了密码验证
-                return true;
+                // 使用自定义的PasswordUtil进行密码验证
+                return org.example.util.PasswordUtil.validatePassword(rawPassword.toString(), encodedPassword);
             }
         };
-    }
-
-    @Bean
-    @Override
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
     }
 } 
